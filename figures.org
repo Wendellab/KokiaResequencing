@@ -1,0 +1,892 @@
+#+title: Readme
+#+property: header-args:R :session (doom-project-name)
+#+property: header-args:R+ :results output silent
+
+
+* Figure 1 - Map
+:PROPERTIES:
+:CREATED:  [2025-02-20 Thu 14:57]
+:END:
+
+Load Libraries
+#+begin_src R :exports both :results output verbatim replace
+library("tidyverse")
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("grid")
+library("jpeg")
+
+sessionInfo()
+#+end_src
+
+#+RESULTS:
+#+begin_example
+R version 4.2.2 (2022-10-31)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Rocky Linux 9.1 (Blue Onyx)
+
+Matrix products: default
+BLAS:   /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRblas.so
+LAPACK: /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRlapack.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base
+
+other attached packages:
+ [1] rnaturalearthdata_1.0.0 rnaturalearth_1.0.1     sf_1.0-18
+ [4] jpeg_0.1-10             scales_1.3.0            hues_0.2.0
+ [7] lubridate_1.9.2         forcats_1.0.0           stringr_1.5.1
+[10] dplyr_1.1.4             purrr_1.0.2             readr_2.1.4
+[13] tidyr_1.3.1             tibble_3.2.1            ggplot2_3.5.1
+[16] tidyverse_2.0.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.11        RColorBrewer_1.1-3 pillar_1.9.0       compiler_4.2.2
+ [5] class_7.3-22       tools_4.2.2        jsonlite_1.8.7     lifecycle_1.0.4
+ [9] gtable_0.3.5       timechange_0.2.0   viridisLite_0.4.2  pkgconfig_2.0.3
+[13] rlang_1.1.3        cli_3.6.2          DBI_1.2.2          terra_1.7-83
+[17] e1071_1.7-16       httr_1.4.7         withr_3.0.0        generics_0.1.3
+[21] vctrs_0.6.5        hms_1.1.3          classInt_0.4-10    cowplot_1.1.3
+[25] tidyselect_1.2.1   glue_1.7.0         R6_2.5.1           fansi_1.0.6
+[29] tcltk_4.2.2        tzdb_0.4.0         farver_2.1.2       magrittr_2.0.3
+[33] codetools_0.2-19   units_0.8-5        colorspace_2.1-0   labeling_0.4.3
+[37] KernSmooth_2.23-24 utf8_1.2.4         proxy_0.4-27       stringi_1.8.4
+[41] munsell_0.5.1
+#+end_example
+
+Set colors
+#+begin_src R :exports both
+ocean.color <- rgb(193/255, 224/255, 250/255)
+species.color <- RColorBrewer::brewer.pal(name="Set1", 3) %>%
+  setNames(., c("Kc", "Kd", "Kk"))
+#+end_src
+
+Get world shapes from rnaturalearth
+https://www.naturalearthdata.com/about/terms-of-use/
+#+begin_src R :exports both
+world <- ne_countries(scale = 10, returnclass = "sf")
+#+end_src
+
+Subet world to just USA and break =MULTIPOLYGON= into seperate =POLYGON='s.
+Necessary to color each Hawaiin island.
+#+begin_src R :exports both
+usa.polys <- world %>%
+  filter(abbrev == "U.S.A.") %>%
+  st_cast("POLYGON")
+#+end_src
+
+Set bounding box for hawaii.
+#+begin_src R :exports both
+hawaii.bbox <- data.frame(lon=c(-162, -154), lat=c(18,23)) %>%
+  st_as_sf(coords = c('lon', 'lat'), crs=4326) %>%
+  st_bbox() %>%
+  st_as_sfc()
+#+end_src
+
+Get each major hawaiian island based on the GNIS location.
+https://www.sciencebase.gov/catalog/item/6437030bd34ee8d4addcc379
+#+begin_src R :exports both
+island.names <-
+  rbind(c("Kauaʻi",22.04942,-159.530987, "Kk", 0.3, 0.1),
+        c("Niʻihau",21.9066667,-160.1491667, NA, -0.2, 0),
+        c("Oʻahu",21.4333333,-157.9666667, NA, 0.3, 0.3),
+        c("Molokaʻi",21.138307,-157.0124817,"Kc", 0.2, 0),
+        c("Lānaʻi", 20.8679549, -156.9002151, NA, -0.25, -0.25),
+        c("Kahoʻolawe",20.55,-156.6, NA, -0.15, 0),
+        c("Maui", 20.770239,-156.268158, NA, 0.3, 0.3),
+        c("Hawaiʻi",19.5494375,-155.5622864, "Kd", 0.6, 0.6)) %>%
+  as.data.frame %>%
+  setNames(c("Name", "lat", "lon", "fill", "nudge_y", "nudge_x")) %>%
+  st_as_sf(coords = c('lon', 'lat'), crs=4326) %>%
+  cbind(st_coordinates(.$geometry)) %>%
+  mutate(geometry = st_buffer(geometry, dist=1)) %>%
+  st_join(x=usa.polys, largest = T, left=F) %>%
+  select(Name, X, Y, nudge_y, nudge_x, fill, geometry) %>%
+  mutate(text.y = as.numeric(Y) + as.numeric(nudge_y),
+         text.x = as.numeric(X) + as.numeric(nudge_x))
+#+end_src
+
+Create the main map of hawaii
+#+begin_src R :exports both
+hawaii.plot <- ggplot(data = world) +
+  geom_sf() +
+  geom_sf(aes(fill=fill), island.names) +
+  geom_text(aes(text.x, text.y, label=Name), color="black",
+            data=island.names,  lineheight=0.75) +
+  coord_sf(xlim=range(st_coordinates(hawaii.bbox)[,'X']),
+           ylim=range(st_coordinates(hawaii.bbox)[,'Y'])) +
+  scale_fill_manual(values=species.color,
+                    breaks=c("Kc", "Kd", "Kk"),
+                    labels=c("Kc" = "K. cookei",
+                             "Kd" = "K. drynarioids",
+                             "Kk" = "K. kauaiensis")) +
+  annotate(geom = "text", x = -162, y = 23,
+           label = "Hawaiian Islands",
+##           fontface = "italic",
+           family="ETBembo",
+           color = "#0a71b3",
+           vjust = 0.75,
+           hjust = 0,
+           size = 13) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill=ocean.color),
+        axis.title = element_blank(),
+        legend.position = "none",
+        legend.title = element_blank(),
+        legend.text = element_text(family = "ETBembo",
+                                   face="italic",
+                                   size=18),
+        legend.background = element_rect(fill=alpha("white", 0.75)))
+#hawaii.plot
+#+end_src
+
+Rotate world map to center on the hawaiian bounding box [[https://stackoverflow.com/questions/68278789/how-to-rotate-world-map-using-mollweide-projection-with-sf-rnaturalearth-ggplot][StackOverflow]]
+#+begin_src R :exports both
+ante_meridian <- mean(st_coordinates(hawaii.bbox)[,'X'])
+world_ne.sf <- st_as_sf(ne_countries("medium"))
+                                        #
+world_Mollweide_rotated.sf <- world_ne.sf %>%
+  st_break_antimeridian(lon_0 = ante_meridian) %>%
+  st_transform(crs=paste0("+proj=longlat +datum=WGS84 +no_defs +lon_0=",ante_meridian," +x_0=0 +y_0=0"))
+#+end_src
+
+Create world map inset
+#+begin_src R :exports both
+world.plot <- ggplot() +
+  geom_sf(data=world_Mollweide_rotated.sf, fill="grey60", color=NA) +
+  geom_sf(data = hawaii.bbox, fill=NA,color = "white", lwd = 0.5) +
+  coord_sf(ylim=c(-50, 75),
+           xlim=c(-100, 100),
+           expand = F) +
+  annotate(geom = "text", x = 0, y = -20,
+           label = "Pacific\nOcean",
+           fontface = "italic",
+           lineheight = 0.75,
+           family="ETBembo",
+           color = "#0a71b3",
+           vjust = 0,
+           hjust = 0,
+           size = 8) +
+  theme_void() +
+  theme(panel.background = element_rect(fill=ocean.color, color="black"),
+        axis.text = element_blank())
+#+end_src
+
+
+Get image of K. kauaiensis from National Tropical Botanical Gardens
+#+begin_src shell :exports both
+AMAZON=https://s3-us-west-2.amazonaws.com/
+wget -O Kk.jpg \
+    $AMAZON/ntbgmeettheplants/images/600h/2248.jpg
+#+end_src
+
+Get images of Kc and Kd from Wiki
+#+begin_src shell :exports both :results output silent
+WIKI=https://upload.wikimedia.org/wikipedia/commons/
+wget -O Kd.jpg "$WIKI/5/51/Kokia_drynarioides.jpg"
+wget -O Kc.jpg "$WIKI/5/50/Kokia_cookei_%284743890657%29.jpg"
+#+end_src
+
+Setup panel layouts
+#+begin_src R :exports both
+num.per.species <-
+  scale(sapply(relatedness.order, length), center = F) *2
+
+rep(c(num.per.species,2), 2)
+
+top.vp <- viewport(
+  layout=grid.layout(1, 3,
+                     widths=unit(c(3, 2, 1),
+                                 c("null", "mm", "null"))))
+grid.show.layout(top.vp$layout, vp=top.vp)
+#+end_src
+
+
+Final Figure
+#+header: :results output graphics file
+#+header: :file Kayal_Figure01_map.png
+#+header: :width 8 :height 4.3 :units in :res 300 :bg white
+#+begin_src R :exports both
+grid.newpage()
+pushViewport(viewport(
+  layout=grid.layout(1, 4,
+                     widths=unit(c(4, 1, 1, 2),
+                                 c("null", "mm", "null", "mm")))))
+pushViewport(viewport(layout.pos.col = 1))
+grid.draw(ggplotGrob(hawaii.plot))
+pushViewport(viewport(x=0.1, y=0.1,
+                      width=0.45, height = 0.45,
+                      just=c("left", "bottom")))
+grid.draw(ggplotGrob(world.plot))
+popViewport()
+popViewport()
+pushViewport(viewport(
+  layout.pos.col = 3,
+  layout = grid.layout(7, 1,
+                       heights = unit(c(1.25, 1, 1.25, 1, 1.25, 1, 1.5),
+                                      c("lines", "null", "lines",
+                                        "null", "lines",
+                                        "null", "lines")))))
+
+pushViewport(viewport(layout.pos.row = 1))
+grid.text("K. kauaiensis",
+          x=unit(1, "lines"), y=0.20,
+          just = c("left", "bottom"),
+          gp=gpar(fontsize=14, fontface="italic",
+                  fontfamily="ETBembo"), check=TRUE)
+grid.rect(0, 0.1,
+          width= unit(1, "lines"),
+          height= unit(1, "lines"),
+          just=c("left", "bottom"), gp=gpar(fill=species.color["Kk"]))
+popViewport()
+pushViewport(viewport(layout.pos.row = 2, clip=T))
+flower.kk = readJPEG("Kk.jpg")
+flower.kk.dim = dim(flower.kk)
+flower.kk.dim.ratio = flower.kk.dim[2]/flower.kk.dim[1]
+grid.raster(flower.kk, width = flower.kk.dim.ratio)
+popViewport()
+
+pushViewport(viewport(layout.pos.row = 3))
+grid.text("K. cookei",
+          x=unit(1, "lines"), y=0.20,
+          just = c("left", "bottom"),
+          gp=gpar(fontsize=14, fontface="italic",
+                  fontfamily="ETBembo"), check=TRUE)
+grid.rect(0, 0.1,
+          width= unit(1, "lines"),
+          height= unit(1, "lines"),
+          just=c("left", "bottom"), gp=gpar(fill=species.color["Kc"]))
+popViewport()
+pushViewport(viewport(layout.pos.row = 4, clip=T))
+flower.kc = readJPEG("Kc.jpg")
+flower.kc.dim = dim(flower.kc)
+flower.kc.dim.ratio = flower.kc.dim[2]/flower.kc.dim[1]
+grid.raster(flower.kc, width = flower.kc.dim.ratio)
+popViewport()
+
+pushViewport(viewport(layout.pos.row = 5))
+grid.text("K. drynarioides",
+          x=unit(1, "lines"), y=0.20,
+          just = c("left", "bottom"),
+          gp=gpar(fontsize=14, fontface="italic",
+                  fontfamily="ETBembo"), check=TRUE)
+grid.rect(0, 0.1,
+          width= unit(1, "lines"),
+          height= unit(1, "lines"),
+          just=c("left", "bottom"), gp=gpar(fill=species.color["Kd"]))
+popViewport()
+pushViewport(viewport(layout.pos.row = 6, clip=T))
+flower.kd = readJPEG("Kd.jpg")
+flower.kd.dim = dim(flower.kd)
+flower.kd.dim.ratio = flower.kd.dim[2]/flower.kd.dim[1]
+grid.raster(flower.kd, width = flower.kd.dim.ratio)
+popViewport()
+
+#+end_src
+
+#+RESULTS:
+[[file:Kayal_Figure01_map.png]]
+
+* Figure 2 - PCA | Structure | Relatedness
+
+Load Libraries
+#+begin_src R :exports both :results output verbatim replace
+library(tidyverse)
+library(hues)
+library(grid)
+library(scales)
+sessionInfo()
+#+end_src
+
+#+RESULTS:
+#+begin_example
+R version 4.2.2 (2022-10-31)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Rocky Linux 9.1 (Blue Onyx)
+
+Matrix products: default
+BLAS:   /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRblas.so
+LAPACK: /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRlapack.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base
+
+other attached packages:
+ [1] scales_1.3.0    hues_0.2.0      lubridate_1.9.2 forcats_1.0.0   stringr_1.5.1
+ [6] dplyr_1.1.4     purrr_1.0.2     readr_2.1.4     tidyr_1.3.1     tibble_3.2.1
+[11] ggplot2_3.5.1   tidyverse_2.0.0
+
+loaded via a namespace (and not attached):
+ [1] pillar_1.9.0       compiler_4.2.2     RColorBrewer_1.1-3 tools_4.2.2
+ [5] lifecycle_1.0.4    gtable_0.3.5       timechange_0.2.0   pkgconfig_2.0.3
+ [9] rlang_1.1.3        cli_3.6.2          withr_3.0.0        generics_0.1.3
+[13] vctrs_0.6.5        hms_1.1.3          cowplot_1.1.3      tidyselect_1.2.1
+[17] glue_1.7.0         R6_2.5.1           fansi_1.0.6        carData_3.0-5
+[21] tzdb_0.4.0         farver_2.1.2       car_3.1-2          magrittr_2.0.3
+[25] MASS_7.3-60        abind_1.4-8        colorspace_2.1-0   labeling_0.4.3
+[29] utf8_1.2.4         stringi_1.8.4      munsell_0.5.1      crayon_1.5.2
+#+end_example
+Set colors
+#+begin_src R :exports both
+species.color <- RColorBrewer::brewer.pal(name="Set1", 3) %>%
+  setNames(., c("Kc", "Kd", "Kk"))
+
+interspecific.colors <- setNames(hues::iwanthue(8),
+                                sprintf("P%d", 1:8))
+
+intraspecific.colors <- list(
+  "Kocoo" = colorRampPalette(c(interspecific.colors["P6"], "grey"))(3),
+  "Kodry" = c("#95bbb6", "#615998", "#7ac85a",
+              muted("#95bbb6"), muted("#615998")),
+  "Kokau" = c("#c35d93", "#c5ac53", "#c4553e", "#9041cc")
+)
+#+end_src
+
+** PCA
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:30]
+:END:
+Load eigenvalues/vectors
+#+begin_src R :exports both
+
+eigenvalues <-
+  list("Kocoo" = "PCA_Kokia/Kocoo.22ind.gene.all.eigenval",
+       "Kodry" = "PCA_Kokia/Kodry.92ind.gene.all.eigenval",
+       "Kokau" = "PCA_Kokia/Kokau.45ind.gene.eigenval",
+       "All" = "PCA_Kokia/Kokau.KokianoHVs.gene.all.eigenval") %>%
+  lapply(read.delim, header = F, col.names=c("ev")) %>%
+  lapply( mutate,
+         per.var = 100*ev/sum(ev),
+         comp = sprintf("PC%d", row_number())) %>%
+  lapply(pull, per.var, name=comp)
+
+eigenvectors <-
+  list("Kocoo" = "PCA_Kokia/Kocoo.22ind.gene.all.eigenvec",
+       "Kodry" = "PCA_Kokia/Kodry.92ind.gene.all.eigenvec",
+       "Kokau" = "PCA_Kokia/Kokau.45ind.gene.eigenvec",
+       "All" = "PCA_Kokia/Kokau.KokianoHVs.gene.all.eigenvec") %>%
+  lapply(read.table, header = F,
+         col.names=c("num","sample",
+                     names(eigenvalues[["All"]]))) %>%
+  lapply(mutate, Species=sub("_.*", "", sample))
+
+eigen.plots <- mapply(function(vec, val, name) {
+  ggplot(vec, aes(PC1, PC2, color=Species)) +
+    geom_point() +
+    ggtitle(name) +
+    scale_color_manual(values=species.color,
+                       breaks=c("Kc", "Kd", "Kk"),
+                       labels=c("Kc" = "K. cookei",
+                                "Kd" = "K. drynarioids",
+                                "Kk" = "K. kauaiensis")) +
+    xlab(sprintf("PC1 (%0.2f%%)", val["PC1"])) +
+    ylab(sprintf("PC2 (%0.2f%%)", val["PC2"])) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(
+                               face="italic",
+                               size=15))
+},
+eigenvectors,
+eigenvalues,
+c("K. cookei", "K. drynarioids", "K. kauaiensis", "Interspecific"),
+SIMPLIFY = F)
+eigen.plots[["All"]] = eigen.plots[["All"]] +
+  theme(legend.position = c(0.2, 0.2),
+        legend.background = element_rect(fill="white", color="grey"),
+        legend.title = element_blank(),
+        legend.text = element_text(
+                                   face="italic",
+                                   size=12),
+        plot.title = element_text(face="plain"))
+
+eigen.plots[["All"]]
+#+end_src
+
+** Relatdeness
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:27]
+:END:
+
+Load relatedness table for each species
+#+begin_src R :exports both
+relatedness <- list("Kocoo" = "Kocoo.22ind.rel.relatedness2",
+                    "Kodry" = "Kodry.92ind.rel.relatedness2",
+                    "Kokau" = "Kokau.45ind.rel.relatedness2") %>%
+  lapply(read.delim) %>%
+  lapply(select, INDV1, INDV2, "REL"=RELATEDNESS_PHI)
+#+end_src
+
+Order individulas based on relatedness using =hclust=
+#+begin_src R :exports both
+relatedness.order <- lapply(relatedness, mutate, REL = 1 - REL) %>%
+  lapply(spread, "INDV2", "REL") %>%
+  lapply(column_to_rownames, "INDV1") %>%
+  lapply(as.matrix) %>%
+  lapply(as.dist) %>%
+  lapply(hclust) %>%
+  lapply(function(x) x[c("labels", "order")])  %>%
+  lapply(bind_cols) %>%
+  lapply(mutate, new = labels[order]) %>%
+  lapply(pull, new) %>%
+  lapply(rev)
+#+end_src
+
+
+Create relatedness plots. Using binned relatedness base on relationships defined in the user manual: https://www.kingrelatedness.com/manual.shtml#REFERENCE.
+#+begin_quote
+range >.354, [.177, .354], [.0884, .177] and [.0442, .0884] corresponds to duplicate/MZ twin, 1st-degree, 2nd-degree, and 3rd-degree relationships respectively
+#+end_quote
+#+begin_src R :exports both
+plot.relatedness <- mapply(function(rel, rel.order){
+  mutate(rel, INDV1 = factor(INDV1, rel.order),
+         INDV2 = factor(INDV2, rel.order))  %>%
+    filter(as.numeric(INDV1) >= as.numeric(INDV2)) %>%
+    ggplot(aes(INDV1, INDV2, fill=REL)) +
+    scale_x_discrete(name="", position = 'top', expand=c(0,0)) +
+    scale_y_discrete(name="", position = 'left', expand=c(0,0)) +
+    scale_fill_viridis_b(na.value='white',
+    breaks=c(0.0442, 0.0884, 0.117, 0.354),
+    labels=c("3rd", "2nd", "1st", "duplicate")) +
+    scale_color_steps(n.breaks=2, high = "black",
+                      low="white", breaks=c(0.117),
+                      limits=c(0,0.5), guide = NULL,
+                      na.value="white") +
+    geom_tile() +
+    #geom_text(aes(label=sprintf("%0.2f", REL), color=REL),
+    #na.rm = T) +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank(),
+          legend.position ="none",
+          plot.margin = unit(c(0,0,0,0), "mm")
+          )
+  }, relatedness, relatedness.order, SIMPLIFY = F)
+#+end_src
+** Structure
+Load stucture data from saves for interspecific and the three intraspecific LEA runs.
+Write out table tables for Supp. Data
+#+begin_src R :exports both
+load("Kokau.KokianoHVs.K8.q_df_prates.RData")
+interspecific <- q_df_prates
+
+write.table(interspecies, "inter.lea.txt", sep="\t",
+            quote=F, row.names=F)
+
+intraspecific <- list()
+load('Kocoo.22ind.K3.q_df_prates.RData')
+intraspecific[["Kocoo"]] <- q_df_prates
+load('Kodry.92ind.K5.q_df_prates.RData')
+intraspecific[["Kodry"]] <- q_df_prates
+load('Kokau.45ind.K4.q_df_prates.RData')
+intraspecific[["Kokau"]] <- q_df_prates
+
+write.table(structure[["Kocoo"]], "intra.Kocoo.lea.txt", sep="\t",
+            quote=F, row.names = F)
+write.table(structure[["Kodry"]], "intra.Kodry.lea.txt", sep="\t",
+            quote=F, row.names = F)
+write.table(structure[["Kokau"]], "intra.Kokau.lea.txt", sep="\t",
+            quote=F, row.names = F)
+#+end_src
+
+Create plots for interspecific structure for each species. To keep everything aligned later, each species needs to be graphed separately.
+#+begin_src R :exports both
+plot.interspecific <- lapply(relatedness.order, function(rel.order) {
+  interspecific %>%
+    mutate(order = factor(order, rel.order))  %>%
+    na.omit() %>%
+    ggplot(aes(order, q, fill=pop)) +
+    geom_col(width=1) +
+    scale_fill_manual(values=interspecific.colors) +
+    scale_x_discrete(expand = c(0,0)) +
+    scale_y_continuous(labels=scales::label_percent(),
+                       expand = c(0,0),
+                       breaks=c(0.25, 0.5, 0.75))+
+    theme_minimal()+
+    theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
+          #axis.text = element_blank(),
+          axis.title = element_blank(),
+          plot.margin = unit(c(0,0,0,0), "mm"),
+          legend.position = 'none')
+})
+#+end_src
+
+Create plots for intraspecific structure for each species.
+#+begin_src R :exports both
+plot.intraspecific <-
+  mapply(function(struct, rel.order, colors) {
+    struct %>%
+      mutate(order = factor(order, rel.order))  %>%
+      ggplot(aes(order, q, fill=pop)) +
+      geom_col(width=1) +
+      scale_fill_manual(values=colors) +
+      scale_x_discrete(expand = c(0,0)) +
+      scale_y_continuous(labels=scales::label_percent(),
+                         expand = c(0,0),
+                         breaks=c(0.25, 0.5, 0.75))+
+      theme_minimal()+
+      theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = unit(c(0,0,0,0), "mm"),
+        legend.position = 'none')
+  },
+  intraspecific,
+  relatedness.order,
+  intraspecific.colors,
+  SIMPLIFY = F)
+#+end_src
+
+** Figure
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:28]
+:END:
+
+Create legend
+#+begin_src R :exports both
+legends <- list(
+interspecific =
+  as.data.frame(interspecific.colors, nm="color") %>%
+  rownames_to_column("Pop") %>%
+  mutate(Pop = fct_inorder(Pop, ordered = F)) %>%
+  ggplot(aes(Pop, 1, fill=color)) +
+  geom_tile() +
+  ggtitle("Interspecific") +
+  scale_fill_identity() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank()),
+intraspecific =
+  lapply(intraspecific.colors, as.data.frame, nm="color") %>%
+  lapply(rownames_to_column, "Pop") %>%
+  bind_rows(.id="Species") %>%
+  mutate(Pop = sprintf("SP%s", Pop),
+         Species = factor(Species,
+                          c("Kocoo", "Kodry", "Kokau"),
+                          c("K. cookei",
+                            "K. drynarioides",
+                            "K. kauaiensis"))) %>%
+  ggplot(aes(Pop, 1, fill=color)) +
+  geom_tile() +
+  ggtitle("Intraspecific") +
+  scale_fill_identity() +
+  scale_y_continuous(expand = c(0,0)) +
+  facet_grid(cols=vars(Species), scales="free",
+             space="free", switch='x') +
+  theme_minimal() +
+  theme(strip.placement = "outside",
+        strip.text = element_text(face="italic", size=10),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank()),
+relatedness =
+  data.frame(color=rev(pal_viridis()(5)),
+           type=fct_inorder(c("Dup", "1st", "2nd", "3rd", ">3rd"))) %>%
+  ggplot(aes(type, 1, fill=color)) +
+  geom_tile() +
+  ggtitle("Relatedness") +
+  scale_fill_identity() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank())
+) %>%
+  lapply(function(p)
+    p + theme(plot.title = element_text())) %>%
+  lapply(ggplotGrob)
+#cowplot::plot_grid(plotlist = legends, nrow = 1)
+#+end_src
+
+#+header: :results output file graphics
+#+header: :file Kayal_Figure02_pca-struct-relate.png
+#+header: :bg white :width 12 :height 16.5 :units in :res 300
+#+begin_src R :exports both
+grid.newpage()
+pushViewport(viewport(
+  layout = grid.layout(nrow = 3, ncol = 2,
+                       heights = unit(c(4,1,3),
+                                      c("null", "lines", "null")),
+                       widths = unit(c(2, 1), c("lines", "null")))))
+#
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 1))
+grid.text("A", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25, y=1, x=1)
+popViewport()
+#
+pushViewport(viewport(layout.pos.row = 3,
+                      layout.pos.col = 1))
+grid.text("B", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.95, x=1)
+grid.text("C", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.75, x=1)
+grid.text("D", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.57, x=1)
+popViewport()
+
+
+
+
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 2))
+pushViewport(viewport(
+  layout = grid.layout(nrow = 2, ncol = 3,
+                       widths = unit(c(1,1,1),
+                                     c("null", "lines", "null")))))
+
+# PCAs
+mapply(function(row, col, pca){
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = col))
+grid.draw(ggplotGrob(pca))
+popViewport()
+},
+c(1,1,2,2),
+c(1,3,1,3),
+eigen.plots[c("All", "Kocoo", "Kodry", "Kokau")])
+popViewport()
+popViewport()
+
+
+num.per.species <-
+  scale(sapply(relatedness.order, length), center = F) *2
+
+pushViewport(viewport(layout.pos.row = 3,
+                      layout.pos.col = 2))
+pushViewport(viewport(
+  layout=grid.layout(7, 7,
+                     widths=unit(c(2,
+                                   num.per.species[1], 2,
+                                   num.per.species[2], 2,
+                                   num.per.species[3], 1),
+                                 c("lines",
+                                   rep(c("null", "mm"), length.out = 5),
+                                       "lines")),
+                     heights=unit(c(2,
+                                    1, 2,
+                                    1, 2,
+                                    max(num.per.species), 4),
+                                  c("lines",
+                                    "null", "mm",
+                                    "null", "mm",
+                                    "null", "lines")),
+                     respect = F)))
+
+
+# STUCTURE : BOTH INTER AND INTRA
+mapply(function(row, col, plot){
+plot.baked <- ggplotGrob(plot)
+plot.grob  <-
+  plot.baked[["grobs"]][
+    which(plot.baked[["layout"]]$name == "panel")][[1]]
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = col))
+grid.draw(plot.grob)
+popViewport()
+       },
+       rep(c(2,4), each=3),
+       rep(c(2,4,6), 2),
+       c(plot.interspecific[c("Kocoo", "Kodry", "Kokau")],
+         plot.intraspecific[c("Kocoo", "Kodry", "Kokau")]))
+
+
+# RELATEDNESS
+mapply(function(col, plot){
+  plot.baked <- ggplotGrob(plot)
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "panel")][[1]]
+  pushViewport(viewport(layout.pos.row = 6,
+                        layout.pos.col = col))
+                                        #
+  aspect.ratio =
+    as.numeric(convertY(unit(1, 'inch'), unitTo = 'native'))/
+    as.numeric(convertX(unit(1, 'inch'), unitTo = 'native'))
+                                        #
+  pushViewport(viewport(angle=-45,
+                        width=1/sqrt(2),
+                        height=aspect.ratio/sqrt(2),
+                        y=1))
+  grid.draw(plot.grob)
+  popViewport()
+  popViewport()
+},
+c(2,4,6),
+plot.relatedness[c("Kocoo", "Kodry", "Kokau")])
+
+font.regular = gpar(fontsize=15)
+font.species = gpar(fontsize=15,
+                  fontface="italic")
+
+mapply(function(col, text){
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = col))
+grid.text(text, gp=font.species, check=TRUE)
+popViewport()
+},
+c(2,4,6),
+c("K. cookei","K. drynarioides","K. kauaiensis"))
+
+mapply(function(row, text, y, hjust){
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = 1))
+grid.text(text, rot=90, gp=font.regular, check=TRUE,
+          y=y, hjust=hjust)
+popViewport()
+},
+c(2,4,6),
+c("Interspecific", "Intraspecific", "Relatdeness"),
+c(0.5,0.5,1),
+c(0.5, 0.5, 1))
+
+popViewport()
+popViewport()
+
+pushViewport(viewport(x=0, y=0, just=c("left", "bottom"),
+                      height = unit(6, "lines")))
+pushViewport(viewport(
+  layout=grid.layout(ncol=3,
+                     widths = unit(c(8,13,5), "null"))))
+
+mapply(function(col, h, plot){
+pushViewport(viewport(layout.pos.col = col))
+pushViewport(viewport(height=h, y=1, just=c("center", "top")))
+grid.draw(plot)
+popViewport()
+popViewport()
+}, 1:3, c(0.75, 1, 0.75), legends)
+
+popViewport()
+popViewport()
+popViewport()
+#+end_src
+
+#+RESULTS:
+[[file:Kayal_Figure02_pca-struct-relate.png]]
+
+** Supp Figure
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:28]
+:END:
+
+#+header: :results output file graphics
+#+header: :file Kayal_FigureSX-structure.pdf
+#+header: :bg white :width 8 :height 24
+#+begin_src R :exports both
+
+grid.newpage()
+pushViewport(viewport(
+  layout = grid.layout(7, 5,
+                       heights = unit(c(2,
+                                        num.per.species[1], 2,
+                                        num.per.species[2], 2,
+                                        num.per.species[3], 2),
+                                 c("lines",
+                                   rep(c("null", "lines"), length.out = 5),
+                                       "lines")),
+                     widths=unit(c(10,
+                                    1, 1,
+                                    1, 10),
+                                  c("lines",
+                                    "null", "mm",
+                                    "null", "lines")))))
+
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 2))
+  grid.text("Interspecific")
+popViewport()
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 4))
+  grid.text("Intraspecific")
+popViewport()
+
+
+
+#Y axis
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot + coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "axis-l")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 1))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(2,4,6), plot.interspecific)
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot +
+                           scale_x_discrete(position = "top") +
+                           coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "axis-r")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 5))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(2,4,6), plot.interspecific)
+
+# X axis
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot + coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "axis-b")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 2))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(3,5,7), plot.interspecific)
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot + coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "axis-b")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 4))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(3,5,7), plot.intraspecific)
+
+
+
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot + coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "panel")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 2))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(2,4,6), plot.interspecific)
+
+mapply(function(row, plot){
+  plot.baked <- ggplotGrob(plot + coord_flip())
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "panel")][[1]]
+  pushViewport(viewport(layout.pos.row = row,
+                        layout.pos.col = 4))
+  grid.draw(plot.grob)
+  popViewport()
+}, c(2,4,6), plot.intraspecific)
+
+#+end_src
