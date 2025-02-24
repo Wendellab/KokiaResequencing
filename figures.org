@@ -890,3 +890,6 @@ mapply(function(row, plot){
 }, c(2,4,6), plot.intraspecific)
 
 #+end_src
+
+#+RESULTS:
+[[file:Kayal_FigureSX-structure.pdf]]
