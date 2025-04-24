@@ -2,6 +2,10 @@
 #+property: header-args:R :session (doom-project-name)
 #+property: header-args:R+ :results output silent
 
+#+begin_src tmux :exports both
+man
+#+end_src
+
 
 * Figure 1 - Map
 :PROPERTIES:
@@ -316,28 +320,25 @@ BLAS:   /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/
 LAPACK: /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRlapack.so
 
 locale:
- [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8
- [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
- [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C
-[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
-[1] grid      stats     graphics  grDevices utils     datasets  methods   base
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] scales_1.3.0    hues_0.2.0      lubridate_1.9.2 forcats_1.0.0   stringr_1.5.1
- [6] dplyr_1.1.4     purrr_1.0.2     readr_2.1.4     tidyr_1.3.1     tibble_3.2.1
+ [1] scales_1.3.0    hues_0.2.0      lubridate_1.9.2 forcats_1.0.0   stringr_1.5.1  
+ [6] dplyr_1.1.4     purrr_1.0.2     readr_2.1.4     tidyr_1.3.1     tibble_3.2.1   
 [11] ggplot2_3.5.1   tidyverse_2.0.0
 
 loaded via a namespace (and not attached):
- [1] pillar_1.9.0       compiler_4.2.2     RColorBrewer_1.1-3 tools_4.2.2
- [5] lifecycle_1.0.4    gtable_0.3.5       timechange_0.2.0   pkgconfig_2.0.3
- [9] rlang_1.1.3        cli_3.6.2          withr_3.0.0        generics_0.1.3
-[13] vctrs_0.6.5        hms_1.1.3          cowplot_1.1.3      tidyselect_1.2.1
-[17] glue_1.7.0         R6_2.5.1           fansi_1.0.6        carData_3.0-5
-[21] tzdb_0.4.0         farver_2.1.2       car_3.1-2          magrittr_2.0.3
-[25] MASS_7.3-60        abind_1.4-8        colorspace_2.1-0   labeling_0.4.3
-[29] utf8_1.2.4         stringi_1.8.4      munsell_0.5.1      crayon_1.5.2
+ [1] magrittr_2.0.3   hms_1.1.3        tidyselect_1.2.1 munsell_0.5.1    cowplot_1.1.3   
+ [6] timechange_0.2.0 colorspace_2.1-0 R6_2.5.1         rlang_1.1.3      fansi_1.0.6     
+[11] tools_4.2.2      gtable_0.3.5     utf8_1.2.4       cli_3.6.2        withr_3.0.0     
+[16] lifecycle_1.0.4  tzdb_0.4.0       vctrs_0.6.5      glue_1.7.0       stringi_1.8.4   
+[21] compiler_4.2.2   pillar_1.9.0     generics_0.1.3   pkgconfig_2.0.3
 #+end_example
 Set colors
 #+begin_src R :exports both
@@ -355,7 +356,7 @@ intraspecific.colors <- list(
 )
 #+end_src
 
-** PCA
+** Plink PCA
 :PROPERTIES:
 :CREATED:  [2025-02-24 Mon 08:30]
 :END:
@@ -416,16 +417,42 @@ eigen.plots[["All"]] = eigen.plots[["All"]] +
 eigen.plots[["All"]]
 #+end_src
 
+** R PCA
+:PROPERTIES:
+:CREATED:  [2025-03-12 Mon 09:34]
+:END:
+Load eigenvalues/vectors
+#+begin_src R :exports both
+pca <- list(
+"Kocoo" = "per_sp/KcnoHVs/Kocoo.22ind.gene.vcf.gds.RData",
+"KodryHV" = "per_sp/KdHVs/Kodry.96ind.gene.vcf.gds.RData",
+"KocooHV" = "per_sp/KcHVs/Kocoo.26ind.gene.vcf.gds.RData",
+"Kodry" = "per_sp/KdnoHVs/Kodry.92ind.gene.vcf.gds.RData",
+"Kokau" = "per_sp/Kk/Kokau.45ind.gene.vcf.gds.RData",
+"KcHV" = "allvsKk/KcHVs/Kokau.KokiaKcHVs.gene.vcf.gds.RData",
+"KdHV" = "allvsKk/KdHVs/Kokau.Kokia.gene.vcf.gds.RData",
+"noHV" = "allvsKk/noHVs/Kokau.KokianoHVs.gene.vcf.gds.RData") %>%
+  lapply(function(x) {
+    load(x, tmp <- new.env())
+    tmp$q_df_prates
+  })
+
+
+#+end_src
+
 ** Relatdeness
 :PROPERTIES:
 :CREATED:  [2025-02-24 Mon 08:27]
 :END:
 
-Load relatedness table for each species
+Load relatedness table for each species. KocooHV and KodryHV include the four HAVO samples.
 #+begin_src R :exports both
-relatedness <- list("Kocoo" = "Kocoo.22ind.rel.relatedness2",
-                    "Kodry" = "Kodry.92ind.rel.relatedness2",
-                    "Kokau" = "Kokau.45ind.rel.relatedness2") %>%
+relatedness <- list(
+  "KocooHV" = "per_sp/KcHVs/Kocoo.26ind.relatedness2",
+  "KodryHV" = "per_sp/KdHVs/Kodry.96ind.gene.relatedness2",
+  "Kocoo"   = "per_sp/KcnoHVs/Kocoo.22ind.gene.relatedness2",
+  "Kodry"   = "per_sp/KdnoHVs/Kodry.92ind.gene.relatedness2",
+  "Kokau"   = "per_sp/Kk/Kokau.45ind.rel.relatedness2") %>%
   lapply(read.delim) %>%
   lapply(select, INDV1, INDV2, "REL"=RELATEDNESS_PHI)
 #+end_src
@@ -470,7 +497,7 @@ plot.relatedness <- mapply(function(rel, rel.order){
     #na.rm = T) +
     coord_equal() +
     theme_minimal() +
-    theme(axis.text = element_blank(),
+    theme(#axis.text = element_blank(),
           axis.title = element_blank(),
           panel.grid = element_blank(),
           legend.position ="none",
@@ -482,59 +509,122 @@ plot.relatedness <- mapply(function(rel, rel.order){
 Load stucture data from saves for interspecific and the three intraspecific LEA runs.
 Write out table tables for Supp. Data
 #+begin_src R :exports both
-load("Kokau.KokianoHVs.K8.q_df_prates.RData")
-interspecific <- q_df_prates
+intraspecific <- list(
+ "KodryHV" = "per_sp/KdHVs/Kodry.96ind.K6.q_df_prates.RData",
+ "KocooHV" = "per_sp/KcHVs/Kocoo.26ind.K4.q_df_prates.RData",
+ "Kodry"   = "per_sp/KdnoHVs/Kodry.92ind.K5.q_df_prates.RData",
+ "Kocoo"   = "per_sp/KcnoHVs/Kocoo.22ind.K3.q_df_prates.RData",
+ "Kokau"   = "per_sp/Kk/Kokau.45ind.K4.q_df_prates.RData") %>%
+  lapply(function(x) {
+    load(x, tmp <- new.env())
+    tmp$q_df_prates
+  })
 
-write.table(interspecies, "inter.lea.txt", sep="\t",
-            quote=F, row.names=F)
+interspecific <- list(
+"KcHV9" = "allvsKk/KcHVs/Kokau.KokiaKcHVs.K9.q_df_prates.RData",
+"KdHV9" = "allvsKk/KdHVs/Kokau.KokiaKdHVs.K9.q_df_prates.RData",
+"KcHV" = "allvsKk/KcHVs/Kokau.KokiaKcHVs.K8.q_df_prates.RData",
+"KdHV" = "allvsKk/KdHVs/Kokau.Kokia.K8.q_df_prates.RData",
+"NoHV" = "allvsKk/noHVs/Kokau.KokianoHVs.K8.q_df_prates.RData") %>%
+  lapply(function(x) {
+    load(x, tmp <- new.env())
+    tmp$q_df_prates
+  })
 
-intraspecific <- list()
-load('Kocoo.22ind.K3.q_df_prates.RData')
-intraspecific[["Kocoo"]] <- q_df_prates
-load('Kodry.92ind.K5.q_df_prates.RData')
-intraspecific[["Kodry"]] <- q_df_prates
-load('Kokau.45ind.K4.q_df_prates.RData')
-intraspecific[["Kokau"]] <- q_df_prates
+#+end_src
 
-write.table(structure[["Kocoo"]], "intra.Kocoo.lea.txt", sep="\t",
-            quote=F, row.names = F)
-write.table(structure[["Kodry"]], "intra.Kodry.lea.txt", sep="\t",
-            quote=F, row.names = F)
-write.table(structure[["Kokau"]], "intra.Kokau.lea.txt", sep="\t",
-            quote=F, row.names = F)
+Write tables  for Supp. Data
+#+begin_src R :exports both :results silent
+mapply(write.table,
+       MoreArgs = list( sep="\t", quote=F, row.names=F),
+       interspecific,
+       sprintf("inter.%s.lea.txt", names(interspecific)))
+
+mapply(write.table,
+       MoreArgs = list( sep="\t", quote=F, row.names=F),
+       intraspecific,
+       sprintf("intra.%s.lea.txt", names(intraspecific)))
+#+end_src
+
+Compare interspecific populations between the three runs
+#+header: :results output file graphics
+#+header: :file compare-interspecific-structure.pdf
+#+header: :bg white :width 10 :height 24
+#+begin_src R :exports both
+
+colors <-
+  list(
+    "#CA559C"=c("KcHV P5","KcHV9 P5","KdHV P2","KdHV9 P7","NoHV P1"),
+    "#8144C8"=c("KcHV P7","KcHV9 P4","KdHV P5","KdHV9 P4","NoHV P2"),
+    "#9494C0"=c("KcHV P2","KcHV9 P9","KdHV P1","KdHV9 P1","NoHV P3"),
+    "#7FCE55"=c("KcHV P6","KcHV9 P2","KdHV P8","KdHV9 P6","NoHV P4"),
+    "#C15642"=c("KcHV P4","KcHV9 P6","KdHV P7","KdHV9 P3","NoHV P5"),
+    "#4C2E4C"=c("KcHV P3","KcHV9 P1","KdHV P4","KdHV9 P8","NoHV P6"),
+    "#92C9B2"=c("KcHV P1","KcHV9 P3","KdHV P3","KdHV9 P5","NoHV P7"),
+    "#CDB053"=c("KcHV P8","KcHV9 P8","KdHV P6","KdHV9 P9","NoHV P8"),
+    "#555F3C"=c("KcHV P9","KcHV9 P7","KdHV P9","KdHV9 P2","NoHV P9")
+  ) %>%
+  lapply(as.data.frame, nm='name') %>%
+  bind_rows(.id="color") %>%
+  pull(color, name=name)
+
+
+interspecific %>%
+  bind_rows(.id="Run") %>%
+  mutate(pop=paste(Run, pop)) %>%
+  ggplot(aes(q, individual, fill=pop)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0,0),
+                     labels = scales::label_percent(),
+                     breaks = seq(0.25, 0.75, 0.25)) +
+  scale_fill_manual(values=colors, breaks = names(colors),
+                    guide=guide_legend(nrow=5, ncol=9, byrow=F))+
+  facet_grid(cols=vars(Run)) +
+  theme(legend.position = 'bottom')
 #+end_src
 
 Create plots for interspecific structure for each species. To keep everything aligned later, each species needs to be graphed separately.
 #+begin_src R :exports both
-plot.interspecific <- lapply(relatedness.order, function(rel.order) {
-  interspecific %>%
-    mutate(order = factor(order, rel.order))  %>%
-    na.omit() %>%
-    ggplot(aes(order, q, fill=pop)) +
-    geom_col(width=1) +
-    scale_fill_manual(values=interspecific.colors) +
-    scale_x_discrete(expand = c(0,0)) +
-    scale_y_continuous(labels=scales::label_percent(),
-                       expand = c(0,0),
-                       breaks=c(0.25, 0.5, 0.75))+
-    theme_minimal()+
-    theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
-          #axis.text = element_blank(),
+plot.interspecific <-
+  mapply(function(data, list.order) {
+    lapply(list.order, function(rel.order){
+      data %>%
+        mutate(order = factor(order, rel.order))  %>%
+        na.omit() %>%
+        ggplot(aes(order, q, fill=pop)) +
+        geom_col(width=1) +
+        scale_fill_manual(values=interspecific.colors) +
+        scale_x_discrete(expand = c(0,0)) +
+        scale_y_continuous(labels=scales::label_percent(),
+                           expand = c(0,0),
+                           breaks=c(0.25, 0.5, 0.75))+
+        theme_minimal()+
+        theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
+                                        #axis.text = element_blank(),
           axis.title = element_blank(),
-          plot.margin = unit(c(0,0,0,0), "mm"),
+#          plot.margin = unit(c(0,0,0,0), "mm"),
           legend.position = 'none')
-})
+      })
+},
+interspecific,
+list("KcHV"=setNames(nm=c("KocooHV", "Kodry", "Kokau")),
+     "KdHV"=setNames(nm=c("Kocoo", "KodryHV", "Kokau")),
+     "NoHV"=setNames(nm=c("Kocoo", "Kodry", "Kokau"))) %>%
+lapply(lapply, getElement, object=relatedness.order),
+SIMPLIFY = F
+)
 #+end_src
 
 Create plots for intraspecific structure for each species.
 #+begin_src R :exports both
 plot.intraspecific <-
-  mapply(function(struct, rel.order, colors) {
+  #mapply(function(struct, rel.order, colors) {
+  mapply(function(struct, rel.order) {
     struct %>%
       mutate(order = factor(order, rel.order))  %>%
       ggplot(aes(order, q, fill=pop)) +
       geom_col(width=1) +
-      scale_fill_manual(values=colors) +
+#      scale_fill_manual(values=colors) +
       scale_x_discrete(expand = c(0,0)) +
       scale_y_continuous(labels=scales::label_percent(),
                          expand = c(0,0),
@@ -548,7 +638,7 @@ plot.intraspecific <-
   },
   intraspecific,
   relatedness.order,
-  intraspecific.colors,
+#  intraspecific.colors,
   SIMPLIFY = F)
 #+end_src
 
@@ -893,3 +983,585 @@ mapply(function(row, plot){
 
 #+RESULTS:
 [[file:Kayal_FigureSX-structure.pdf]]
+* New fig 2
+:PROPERTIES:
+:CREATED:  [2025-04-23 Wed 12:07]
+:END:
+
+Load Libraries
+#+begin_src R :exports both :results output verbatim replace
+library(tidyverse)
+library(hues)
+library(grid)
+library(scales)
+sessionInfo()
+#+end_src
+
+#+RESULTS:
+#+begin_example
+R version 4.2.2 (2022-10-31)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Rocky Linux 9.1 (Blue Onyx)
+
+Matrix products: default
+BLAS:   /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRblas.so
+LAPACK: /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRlapack.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] scales_1.3.0    hues_0.2.0      lubridate_1.9.2 forcats_1.0.0   stringr_1.5.1  
+ [6] dplyr_1.1.4     purrr_1.0.2     readr_2.1.4     tidyr_1.3.1     tibble_3.2.1   
+[11] ggplot2_3.5.1   tidyverse_2.0.0
+
+loaded via a namespace (and not attached):
+ [1] magrittr_2.0.3   hms_1.1.3        tidyselect_1.2.1 munsell_0.5.1    cowplot_1.1.3   
+ [6] timechange_0.2.0 colorspace_2.1-0 R6_2.5.1         rlang_1.1.3      fansi_1.0.6     
+[11] tools_4.2.2      gtable_0.3.5     utf8_1.2.4       cli_3.6.2        withr_3.0.0     
+[16] lifecycle_1.0.4  tzdb_0.4.0       vctrs_0.6.5      glue_1.7.0       stringi_1.8.4   
+[21] compiler_4.2.2   pillar_1.9.0     generics_0.1.3   pkgconfig_2.0.3
+#+end_example
+Set colors
+#+begin_src R :exports both
+species.color <- RColorBrewer::brewer.pal(name="Set1", 3) %>%
+  setNames(., c("Kc", "Kd", "Kk"))
+
+interspecific.colors <- setNames(hues::iwanthue(8),
+                                sprintf("P%d", 1:8))
+
+intraspecific.colors <- list(
+  "Kocoo" = colorRampPalette(c(interspecific.colors["P6"], "grey"))(3),
+  "Kodry" = c("#95bbb6", "#615998", "#7ac85a",
+              muted("#95bbb6"), muted("#615998")),
+  "Kokau" = c("#c35d93", "#c5ac53", "#c4553e", "#9041cc")
+)
+#+end_src
+
+** Plink PCA
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:30]
+:END:
+Load eigenvalues/vectors
+#+begin_src R :exports both
+
+pca.data.prefix <-
+  list("All" = "ToTony/KcKdKk_Kkn163.combined.bi.genic.LD",
+       "Kc" = "ToTony/Kc_Kcrefn22.bi.ld",
+       "KcHV" = "ToTony/Kc_Kcrefn23.bi.ld",
+       "Kd" = "ToTony/Kd_Kdrefn92.bi.ld",
+       "Kk" = "ToTony/Kk_Kkrefn45.bi.ld")
+
+eigenvalues <-
+  lapply(pca.data.prefix, paste, "eigenval", sep='.') %>%
+  lapply(read.delim, header = F, col.names=c("ev")) %>%
+  lapply( mutate,
+         per.var = 100*ev/sum(ev),
+         comp = sprintf("PC%d", row_number())) %>%
+  lapply(pull, per.var, name=comp)
+
+eigenvectors <-
+  lapply(pca.data.prefix, paste, "eigenvec", sep='.') %>%
+  lapply(read.table, header = F,
+         col.names=c("num","sample",
+                     names(eigenvalues[["All"]]))) %>%
+  lapply(mutate, Species=sub("_.*", "", sample))
+
+#+end_src
+
+Plot each
+#+begin_src R :exports both
+eigen.plots <- mapply(function(vec, val, name) {
+  ggplot(vec, aes(PC1, PC2, color=Species)) +
+    geom_point() +
+    ggtitle(name) +
+    scale_color_manual(values=species.color,
+                       breaks=c("Kc", "Kd", "Kk"),
+                       labels=c("Kc" = "K. cookei",
+                                "Kd" = "K. drynarioids",
+                                "Kk" = "K. kauaiensis")) +
+    xlab(sprintf("PC1 (%0.2f%%)", val["PC1"])) +
+    ylab(sprintf("PC2 (%0.2f%%)", val["PC2"])) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(
+                               face="italic",
+                               size=15))
+},
+eigenvectors,
+eigenvalues,
+c("Interspecific", "K. cookei", "K. cookei",
+  "K. drynarioids", "K. kauaiensis"),
+SIMPLIFY = F)
+eigen.plots[["All"]] = eigen.plots[["All"]] +
+  theme(legend.position = c(0.2, 0.2),
+        legend.background = element_rect(fill="white", color="grey"),
+        legend.title = element_blank(),
+        legend.text = element_text(
+                                   face="italic",
+                                   size=12),
+        plot.title = element_text(face="plain"))
+
+eigen.plots[["Kd"]]
+#+end_src
+** Order
+:PROPERTIES:
+:CREATED:  [2025-04-23 Wed 13:27]
+:END:
+Use distmatrix to plot everything in the same order
+#+begin_src R :exports both
+sample.order <-
+  read.table("ToTony/KcKdKk_Kkn163.combined.bi.genic.LD.distmatrix") %>%
+  select(-V1) %>%
+  setNames(., nm=c("name", .$V2)) %>%
+  column_to_rownames("name") %>%
+  as.matrix %>%
+  as.dist %>%
+  hclust %>%
+  .[c("labels", "order")] %>%
+  bind_cols %>%
+  mutate(new = sub('.vsKk', '', labels[order])) %>%
+  pull(new) %>%
+  rev
+#+end_src
+
+
+** Structure
+Load stucture data from saves for interspecific and the three intraspecific LEA runs.
+Write out table tables for Supp. Data
+#+begin_src R :exports both
+structure.data <- list(
+  "KcHV" = "ToTony/LEAstruture_KCN23genic.RData",
+  "Kc"   = "ToTony/LEAstruture_KcgenicN22.RData",
+  "Kd"   = "ToTony/LEAstruture_KdN92genic.RData",
+  "Kk"   = "ToTony/LEAstruture_KkN45genic.RData",
+  "All"  = "ToTony/LEAstruture_KkrefN163.RData"
+) %>%
+  lapply(function(x) {
+    load(x, tmp <- new.env())
+    tmp$plot_list
+  })
+
+structure.data[["KcHV"]] <- structure.data[["KcHV"]][[4]]$data
+structure.data[["Kc"]] <- structure.data[["Kc"]][[3]]$data
+structure.data[["Kd"]] <- structure.data[["Kd"]][[4]]$data
+structure.data[["Kk"]] <- structure.data[["Kk"]][[4]]$data
+structure.data[["All"]] <- structure.data[["All"]][[7]]$data
+
+structure.data <- structure.data %>%
+  lapply(mutate, individual=sub("[.]vsK.", "", individual)) %>%
+  lapply(mutate, order = factor(individual, sample.order))
+
+intraspecific.data <- structure.data[c('KcHV','Kc','Kd','Kk')]
+
+interspecific.data <-
+  intraspecific.data %>%
+  lapply(pull, individual) %>%
+  lapply(function(keep) {
+    structure.data$All %>%
+      filter(individual %in% keep)
+    })
+#+end_src
+
+Write tables  for Supp. Data
+#+begin_src R :exports both :results silent
+mapply(write.table,
+       MoreArgs = list( sep="\t", quote=F, row.names=F),
+       interspecific,
+       sprintf("inter.%s.lea.txt", names(interspecific)))
+
+mapply(write.table,
+       MoreArgs = list( sep="\t", quote=F, row.names=F),
+       intraspecific,
+       sprintf("intra.%s.lea.txt", names(intraspecific)))
+#+end_src
+
+Compare interspecific populations between the three runs
+#+header: :results output file graphics
+#+header: :file compare-interspecific-structure.pdf
+#+header: :bg white :width 10 :height 24
+#+begin_src R :exports both
+colors <- rev(iwanthue(9))
+inter.colors <-
+  setNames(colors[1:7], nm=sprintf("P%d", 1:7))
+
+intra.colors <-
+  list(
+    "KcHV" = setNames(colorRampPalette(c("#000000",
+                                         colors[1],
+                                         "#FFFFFF"))(7)[3:6],
+                      nm=sprintf("P%d", 1:4)),
+    "Kc" = setNames(colorRampPalette(c("#000000",
+                                       colors[1],
+                                       "#FFFFFF"))(7)[3:5],
+                    nm=sprintf("P%d", 1:3)),
+    "Kd" = c("P1"=colors[7],
+             "P2"=colors[5],
+             "P3"=colors[8],
+             "P4"=colors[3]),
+    "Kk" = c("P1"=colors[4],
+             "P2"=colors[9],
+             "P3"=colors[6],
+             "P4"=colors[2]))
+
+
+list("inter" = bind_rows(interspecific.data, .id='Species'),
+     "intra" = bind_rows(intraspecific.data, .id='Species')) %>%
+  bind_rows(.id="Compare") %>%
+  mutate(color = ifelse(Compare=="intra", Species, "inter"),
+         color = paste(color, pop, sep='.')) %>%
+  ggplot(aes(q, order, fill=color)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0,0),
+                     labels = scales::label_percent(),
+                     breaks = seq(0.25, 0.75, 0.25)) +
+  scale_fill_manual(values= unlist(list(intra.colors,
+                                        "inter" = inter.colors))) +
+  facet_grid(rows=vars(Species), cols=vars(Compare),
+             scales = 'free', space = 'free') +
+
+  theme(legend.position = 'bottom')
+#+end_src
+
+Create plots for interspecific structure for each species. To keep everything aligned later, each species needs to be graphed separately.
+#+begin_src R :exports both
+plot.interspecific <-
+  lapply(interspecific.data, function(data) {
+      ggplot(data, aes(order, q, fill=pop)) +
+      geom_col(width=1, na.rm=T) +
+      scale_fill_manual(values=inter.colors) +
+      scale_x_discrete(expand = c(0,0)) +
+      scale_y_continuous(labels=scales::label_percent(),
+                         expand = c(0,0),
+                         breaks=c(0.25, 0.5, 0.75))+
+      theme_minimal()+
+      theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = unit(c(0,0,0,0), "mm"),
+        legend.position = 'none')
+  })
+
+
+#+end_src
+
+Create plots for intraspecific structure for each species.
+#+begin_src R :exports both
+plot.intraspecific <-
+  mapply(function(data, colors) {
+      ggplot(data, aes(order, q, fill=pop)) +
+      geom_col(width=1, na.rm=T) +
+      scale_fill_manual(values=colors) +
+      scale_x_discrete(expand = c(0,0)) +
+      scale_y_continuous(labels=scales::label_percent(),
+                         expand = c(0,0),
+                         breaks=c(0.25, 0.5, 0.75))+
+      theme_minimal()+
+      theme(#axis.text.x = element_text(angle = 90, vjust=0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = unit(c(0,0,0,0), "mm"),
+        legend.position = 'none')
+  }, intraspecific.data, intra.colors, SIMPLIFY=F)
+
+plot.intraspecific[["Kc"]]
+#+end_src
+
+** Relatdeness
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:27]
+:END:
+
+Load relatedness table for each species. KocooHV and KodryHV include the four HAVO samples.
+#+begin_src R :exports both
+relatedness <-
+  lapply(pca.data.prefix, paste, "genome", sep='.') %>%
+  lapply(read.table, header=T) %>%
+  lapply(as.tibble) %>%
+  lapply(select, IID1, IID2, PI_HAT) %>%
+  lapply(mutate, IID1=sub('[.]vsK.', '', IID1),
+                 IID2=sub('[.]vsK.', '', IID2))
+#+end_src
+
+#+begin_src R :exports both
+plot.relatedness <-
+  lapply(relatedness,
+         function(rel){
+           tmp <-
+             rbind(rel, setNames(rel, c("IID2", "IID1", "PI_HAT"))) %>%
+             mutate(INDV1 = factor(IID1, sample.order),
+                    INDV2 = factor(IID2, sample.order)) %>%
+             filter(as.numeric(INDV1) >= as.numeric(INDV2))
+
+           labels = c(tmp$IID1, tmp$IID2) %>%
+             unique %>%
+             factor(sample.order) %>% rev
+
+             ggplot(tmp, aes(INDV1, INDV2, fill=PI_HAT)) +
+             scale_x_discrete(name="", position = 'top',
+                              expand=c(0,0)) +
+             scale_y_discrete(name="", position = 'left',
+                              expand=c(0,0)) +
+             scale_fill_viridis_c(na.value='white',
+                                  limits=c(0,1),
+                                  direction = 1 ) +
+             scale_color_steps(n.breaks=2, high = "black",
+                               low="white", breaks=c(0.117),
+                               limits=c(0,0.5), guide = NULL,
+                               na.value="white") +
+             geom_tile() +
+             coord_equal() +
+             theme_minimal() +
+             theme(#axis.text = element_blank(),
+               axis.title = element_blank(),
+               panel.grid = element_blank(),
+               plot.margin = unit(c(0,0,0,0), "mm")
+             )
+           })
+
+plot.relatedness[["Kc"]]
+
+
+#+end_src
+
+** Figure
+:PROPERTIES:
+:CREATED:  [2025-02-24 Mon 08:28]
+:END:
+
+Create legend
+#+begin_src R :exports both
+legends <- list(
+interspecific =
+  as.data.frame(inter.colors, nm="color") %>%
+  rownames_to_column("Pop") %>%
+  mutate(Pop = fct_inorder(Pop, ordered = F)) %>%
+  ggplot(aes(Pop, 1, fill=color)) +
+  geom_tile() +
+  ggtitle("Interspecific") +
+  scale_fill_identity() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank()),
+intraspecific =
+  lapply(intra.colors,
+         as.data.frame, nm="color") %>%
+  lapply(rownames_to_column, "Pop") %>%
+  bind_rows(.id="Species") %>%
+  mutate(Pop = sprintf("SP%s", Pop),
+         Species = factor(Species,
+                          c("Kc", "Kd", "Kk"),
+                          c("K. cookei",
+                            "K. drynarioides",
+                            "K. kauaiensis"))) %>%
+  na.omit() %>%
+  ggplot(aes(Pop, 1, fill=color)) +
+  geom_tile() +
+  ggtitle("Intraspecific") +
+  scale_fill_identity() +
+  scale_y_continuous(expand = c(0,0)) +
+  facet_grid(cols=vars(Species), scales="free",
+             space="free", switch='x') +
+  theme_minimal() +
+  theme(strip.placement = "outside",
+        strip.text = element_text(face="italic", size=10),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank()),
+relatedness =
+  data.frame(x=seq(0,1,length.out=100)) %>%
+  ggplot(aes(x, 1, fill=x)) +
+  geom_raster() +
+  ggtitle("Relatedness") +
+  scale_fill_viridis_c() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank())
+) %>%
+  lapply(function(p)
+    p + theme(plot.title = element_text(),
+              legend.position = 'none')) %>%
+  lapply(ggplotGrob)
+
+cowplot::plot_grid(plotlist = legends, nrow = 1)
+#+end_src
+
+#+header: :results output file graphics
+#+header: :file Kayal_Figure02_pca-struct-relate.new.png
+#+header: :bg white :width 12 :height 16.5 :units in :res 300
+#+begin_src R :exports both
+grid.newpage()
+pushViewport(viewport(
+  layout = grid.layout(nrow = 3, ncol = 2,
+                       heights = unit(c(4,1,3),
+                                      c("null", "lines", "null")),
+                       widths = unit(c(2, 1), c("lines", "null")))))
+#
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 1))
+grid.text("A", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25, y=1, x=1)
+popViewport()
+#
+pushViewport(viewport(layout.pos.row = 3,
+                      layout.pos.col = 1))
+grid.text("B", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.95, x=1)
+grid.text("C", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.75, x=1)
+grid.text("D", gp=gpar(fontsize=20), vjust=1.5, hjust=1.25,
+          y=0.57, x=1)
+popViewport()
+
+
+
+
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = 2))
+pushViewport(viewport(
+  layout = grid.layout(nrow = 2, ncol = 3,
+                       widths = unit(c(1,1,1),
+                                     c("null", "lines", "null")))))
+
+# PCAs
+mapply(function(row, col, pca){
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = col))
+grid.draw(ggplotGrob(pca))
+popViewport()
+},
+c(1,1,2,2),
+c(1,3,1,3),
+eigen.plots[c("All", "Kc", "Kd", "Kk")])
+popViewport()
+popViewport()
+
+
+num.per.species <-
+  structure.data[c('Kc','Kd','Kk')] %>%
+  lapply(pull, individual) %>%
+  lapply(unique) %>%
+  sapply(length) %>%
+  scale(center = F) *2
+
+pushViewport(viewport(layout.pos.row = 3,
+                      layout.pos.col = 2))
+pushViewport(viewport(
+  layout=grid.layout(7, 7,
+                     widths=unit(c(2,
+                                   num.per.species[1], 2,
+                                   num.per.species[2], 2,
+                                   num.per.species[3], 1),
+                                 c("lines",
+                                   rep(c("null", "mm"), length.out = 5),
+                                       "lines")),
+                     heights=unit(c(2,
+                                    1, 2,
+                                    1, 2,
+                                    max(num.per.species), 4),
+                                  c("lines",
+                                    "null", "mm",
+                                    "null", "mm",
+                                    "null", "lines")),
+                     respect = F)))
+
+
+# STUCTURE : BOTH INTER AND INTRA
+mapply(function(row, col, plot){
+plot.baked <- ggplotGrob(plot)
+plot.grob  <-
+  plot.baked[["grobs"]][
+    which(plot.baked[["layout"]]$name == "panel")][[1]]
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = col))
+grid.draw(plot.grob)
+popViewport()
+       },
+       rep(c(2,4), each=3),
+       rep(c(2,4,6), 2),
+       c(plot.interspecific[c("Kc", "Kd", "Kk")],
+         plot.intraspecific[c("Kc", "Kd", "Kk")]))
+
+
+# RELATEDNESS
+mapply(function(col, plot){
+  plot.baked <- ggplotGrob(plot)
+  plot.grob  <-
+    plot.baked[["grobs"]][
+      which(plot.baked[["layout"]]$name == "panel")][[1]]
+  pushViewport(viewport(layout.pos.row = 6,
+                        layout.pos.col = col))
+                                        #
+  aspect.ratio =
+    as.numeric(convertY(unit(1, 'inch'), unitTo = 'native'))/
+    as.numeric(convertX(unit(1, 'inch'), unitTo = 'native'))
+                                        #
+  pushViewport(viewport(angle=-45,
+                        width=1/sqrt(2),
+                        height=aspect.ratio/sqrt(2),
+                        y=1))
+  grid.draw(plot.grob)
+  popViewport()
+  popViewport()
+},
+c(2,4,6),
+plot.relatedness[c("Kc", "Kd", "Kk")])
+
+font.regular = gpar(fontsize=15)
+font.species = gpar(fontsize=15,
+                  fontface="italic")
+
+mapply(function(col, text){
+pushViewport(viewport(layout.pos.row = 1,
+                      layout.pos.col = col))
+grid.text(text, gp=font.species, check=TRUE)
+popViewport()
+},
+c(2,4,6),
+c("K. cookei","K. drynarioides","K. kauaiensis"))
+
+mapply(function(row, text, y, hjust){
+pushViewport(viewport(layout.pos.row = row,
+                      layout.pos.col = 1))
+grid.text(text, rot=90, gp=font.regular, check=TRUE,
+          y=y, hjust=hjust)
+popViewport()
+},
+c(2,4,6),
+c("Interspecific", "Intraspecific", "Relatdeness"),
+c(0.5,0.5,1),
+c(0.5, 0.5, 1))
+
+popViewport()
+popViewport()
+
+pushViewport(viewport(x=0, y=0, just=c("left", "bottom"),
+                      height = unit(6, "lines")))
+pushViewport(viewport(
+  layout=grid.layout(ncol=3,
+                     widths = unit(c(8,13,5), "null"))))
+
+mapply(function(col, h, plot){
+pushViewport(viewport(layout.pos.col = col))
+pushViewport(viewport(height=h, y=1, just=c("center", "top")))
+grid.draw(plot)
+popViewport()
+popViewport()
+}, 1:3, c(0.75, 1, 0.75), legends)
+
+popViewport()
+popViewport()
+popViewport()
+#+end_src
+
+#+RESULTS:
+[[file:Kayal_Figure02_pca-struct-relate.png]]
