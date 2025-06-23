@@ -1,4 +1,4 @@
-# Population Genomics Informs Conservation Strategies for Critically Endangered *Kokia* Species in Hawai‘i
+## Population Genomics Informs Conservation Strategies for Critically Endangered *Kokia* Species in Hawai‘i
 
 <p float="left">
   <img src="Supple/Kokia_Figure1.png" height="500" />
