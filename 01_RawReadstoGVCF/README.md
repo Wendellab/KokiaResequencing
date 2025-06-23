@@ -8,8 +8,12 @@ trimmomatic PE -threads $thr $file1 $file2 $tDir/$name.R1.fq.gz $tDir/$name.U1.f
 
 #### Reads mapping
 ```
-module load bwa
-bwa mem -M -R "@RG\tID:$name \tSM:$name \tPL:ILLUMINA" -t $thr $ref $tDir/$name.R1.fq.gz $tDir/$name.R2.fq.gz > $name.sam
+DIR=/ptmp/LAS/jfw-lab/corrinne/redoKokia/1-filt/
+thr=$SLURM_CPUS_PER_TASK
+ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kocoo.chrONLY.fasta
+
+ml sentieon-genomics
+sentieon bwa mem -M -K 10000000 -R "@RG\tID:$name\tSM:$name\tPL:ILLUMINA" -t $thr $ref $DIR/$baseName.R1.fq.gz $DIR/$baseName.R2.fq.gz | sentieon util sort -o $name.sort.bam -t $thr --sam2bam -i -
 ```
 
 #### Mapped reads sorting in Sentieon
