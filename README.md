@@ -4,7 +4,7 @@
   <img src="Supple/Kokia_Figure1.png" height="500" />
 </p>
 
-Native islands of the three extant species of Hawaiian highly endangered and endemic *Kokia* species (K. cookei Degener, K. drynarioides Lewton, K. kauaiensis Degener & Duvel). Map made with data from Natural Earth. Image credits: photos of *K. cookei* and *K. drynarioides* to David Eickhoff from Pearl City, Hawaii, USA (https://commons.wikimedia.org); photo of *K. kauaiensis* from the National Tropical Botanical Garden, https://ntbg.org/.
+Native islands of the three extant species of Hawaiian highly endangered and endemic *Kokia* species (*K. cookei* Degener, *K. drynarioides* Lewton, *K. kauaiensis* Degener & Duvel). Map made with data from Natural Earth. Image credits: photos of *K. cookei* and *K. drynarioides* to David Eickhoff from Pearl City, Hawaii, USA (https://commons.wikimedia.org); photo of *K. kauaiensis* from the National Tropical Botanical Garden, https://ntbg.org/.
 
 #
 ### Abstract 
