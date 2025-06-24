@@ -9,6 +9,7 @@ trimmomatic PE -threads $thr $file1 $file2 $tDir/$name.R1.fq.gz $tDir/$name.U1.f
 #### All sample reads mapping to one genome Kk (Kokau.chrONLY.fasta)
 ```
 # specify the directory, num threads to use, and genome
+
 DIR=/ptmp/LAS/jfw-lab/corrinne/redoKokia/1-filt/
 thr=$SLURM_CPUS_PER_TASK
 ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kokau.chrONLY.fasta
@@ -30,11 +31,8 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam --algo QualCal $name.recal_
 sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table --algo Haplotyper $name.gVCF --emit_mode gvcf 
 ```
 
-
-
-
-
 #### Calling VCF for each population/species
+##### Generating three VCF files: Kc.redo.self.vcf Kd.yesHAVO.redo.self.vcf Kk.redo.self.vcf
 ```
 ml sentieon-genomics
 
