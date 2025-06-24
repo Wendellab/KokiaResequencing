@@ -1,11 +1,18 @@
-### Building VCF
+### Building intraspecific VCFs for Kc, Kd, and Kk
 
-#### intra
+#### Using trimmed reads to build gVCFs for each species by applying different reference genomes
+##### Reference genomes
+```
+ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kocoo.chrONLY.fasta
+ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kodry.chrONLY.fasta
+ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kokau.chrONLY.fasta
+```
+
+##### Kc, Kd, and Kk reads mapped to its own reference, HAVO samples mapped to Kc ref
 ```
 # specify the directory, num threads to use, and genome
 DIR=/ptmp/LAS/jfw-lab/corrinne/redoKokia/1-filt/
 thr=$SLURM_CPUS_PER_TASK
-ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kocoo.chrONLY.fasta
 
 # files to operate over; file2 is based on file1
 file1=$(ls -1 $DIR/Kc*.R1.fq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
@@ -18,7 +25,6 @@ mkdir $baseName && cd $baseName
 echo "the first file is " $file1
 echo "the second file is " $file2
 echo "the reference file is " $ref
-
 
 ml sentieon-genomics
 
