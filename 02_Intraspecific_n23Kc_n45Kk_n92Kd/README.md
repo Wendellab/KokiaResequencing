@@ -43,5 +43,15 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table -
 sentieon driver -t $thr -r $ref --algo GVCFtyper --emit_mode all $analysis $infiles
 ```
 
+#### Using trimmed reads to build gVCFs for each species by applying different reference genomes
+##### Reference genomes
+```
+```
 
+##### Reference genomes
+```
+```
 
+##### Reference genomes
+```
+```
