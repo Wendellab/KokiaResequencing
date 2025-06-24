@@ -1,5 +1,5 @@
 ### Building intraspecific VCFs for Kc, Kd, and Kk
-
+#
 #### Using trimmed reads to build gVCFs for each species by applying different reference genomes
 ##### Reference genomes
 ```
@@ -42,9 +42,10 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table -
 ```
 sentieon driver -t $thr -r $ref --algo GVCFtyper --emit_mode all $analysis $infiles
 ```
+#
 
 #### Filtering VCFs
-##### Reference genomes
+##### For each VCF, filtering by biallelic and depth for variant and invariant sites
 ```
 ml vcftools bcftools
 
@@ -68,6 +69,7 @@ tabix $output.combined.vcf.gz
 
 ##### Reference genomes
 ```
+
 ```
 
 ##### Reference genomes
