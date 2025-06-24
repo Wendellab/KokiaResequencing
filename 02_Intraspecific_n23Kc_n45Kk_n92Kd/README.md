@@ -37,3 +37,11 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam --algo QualCal $name.recal_
 
 sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table --algo Haplotyper $name.gVCF --emit_mode gvcf
 ```
+
+##### Building VCFs for each species: Kc.yesHAVO.redo.self.vcf // Kd.noHAVO.redo.self.vcf // Kk.redo.self.vcf 
+```
+sentieon driver -t $thr -r $ref --algo GVCFtyper --emit_mode all $analysis $infiles
+```
+
+
+
