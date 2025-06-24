@@ -112,7 +112,9 @@ echo "total merged sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.vcf.gz
 echo "total merged biSNP sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.bi.vcf.gz)
 ```
 
-#### Building final VCF with biallelics and adding annotation
+
+
+#### Building final VCF with biallelics and filter genic region by bed file
 ```
 ## Get a bed file that contains the genic regions
 zcat /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.gz |  awk '$3 == "gene" {print $1, $4-1, $5, $10}' OFS='\t' | grep -v "Unplaced" | grep -v "scaffold" | sed 's/"//g' | sed 's/;//g' > /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed
