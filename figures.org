@@ -557,6 +557,10 @@ sample.order <-
   mutate(new = sub('.vsKk', '', labels[order])) %>%
   pull(new)
 
+#swap Kd_HV_1Ar and Kd_HV_1Br
+sample.order[3] <- "Kd_HV_1Br"
+sample.order[4] <- "Kd_HV_1Ar"
+
 facet.names <- data.frame(sample=sample.order,
                           facet=sub("_.*", "", sample.order)) %>%
   mutate(facet=ifelse(grepl("Kd_HV", sample),"Kc", facet))
@@ -599,6 +603,8 @@ interspecific.data <-
 
 #+end_src
 
+#+RESULTS:
+
 Write tables  for Supp. Data
 #+begin_src R :exports both :results silent
 mapply(write.table,
@@ -639,45 +645,6 @@ intra.colors <-
 
 
 #+end_src
-
-
-Create supp figure comparing inter and intra runs
-#+header: :results output file graphics
-#+header: :file Kayal_SuppFigXX_sturcture.pdf
-#+header: :bg white :width 8.5 :height 22
-#+begin_src R :exports both
-list("inter" = bind_rows(interspecific.data, .id='Species'),
-     "intra" = bind_rows(intraspecific.data, .id='Species')) %>%
-  bind_rows(.id="Compare") %>%
-  filter(Species != "KcHV") %>%
-  mutate(color = ifelse(Compare=="intra", Species, "inter"),
-         color = paste(color, pop, sep='.')) %>%
-  mutate(facet.col = factor(Compare, c("inter", "intra"),
-                            c("Interspecific", "Intraspecific")),
-         facet.row= factor(Species, c("Kc", "Kd", "Kk"),
-                           c("K. cookei",
-                                      "K. drynarioids",
-                                      "K. kauaiensis"))) %>%
-  ggplot(aes(q, order, fill=color)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0,0),
-                     labels = scales::label_percent(),
-                     breaks = seq(0.25, 0.75, 0.25)) +
-  scale_fill_manual(values= unlist(list(intra.colors,
-                                        "inter" = inter.colors))) +
-  facet_grid(rows=vars(facet.row), cols=vars(facet.col),
-             scales = 'free', space = 'free', switch = 'y') +
-  guides(fill=guide_legend(ncol=7, byrow=T, title=""))+
-  theme_minimal() +
-  theme(legend.position = 'none',
-        strip.text=element_text(size=14),
-        strip.text.y=element_text(face='italic'),
-        strip.placement = 'outside',
-        axis.title = element_blank(),
-        panel.grid = element_blank())
-
-#+end_src
-
 
 Create plots for interspecific structure for each species. To keep everything aligned later, each species needs to be graphed separately.
 #+begin_src R :exports both
@@ -734,6 +701,8 @@ plot.intraspecific <-
 #+end_src
 
 #+RESULTS:
+
+
 *** Stats
 - Number of homogeneous populations
   #+begin_src R :exports both :colnames yes
@@ -1084,6 +1053,51 @@ kd.outplant.structure.data %>%
 
 #+RESULTS:
 [[file:Kayal_SuppFigXX_kd_loc_sturcture.pdf]]
+
+
+*** Supp figure
+
+Create supp figure comparing inter and intra runs
+#+header: :results output file graphics
+#+header: :file Kayal_SuppFigXX_sturcture.pdf
+#+header: :bg white :width 8.5 :height 22
+#+begin_src R :exports both
+list("inter" = bind_rows(interspecific.data, .id='Species'),
+     "intra" = bind_rows(intraspecific.data, .id='Species')) %>%
+  bind_rows(.id="Compare") %>%
+  filter(Species != "Kc" | Compare == "inter") %>%
+  mutate(color = ifelse(Compare=="intra", Species, "inter"),
+         color = paste(color, pop, sep='.')) %>%
+  mutate(facet.col = factor(Compare, c("inter", "intra"),
+                            c("Interspecific", "Intraspecific")),
+         facet.row= factor(Species, c("KcHV", "Kc", "Kd", "Kk"),
+                           c("K. cookei","K. cookei",
+                                      "K. drynarioids",
+                                      "K. kauaiensis"))) %>%
+  ggplot(aes(q, order, fill=color)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0,0),
+                     labels = scales::label_percent(),
+                     breaks = seq(0.25, 0.75, 0.25)) +
+  scale_fill_manual(values= unlist(list(intra.colors,
+                                        "inter" = inter.colors))) +
+  facet_grid(rows=vars(facet.row), cols=vars(facet.col),
+             scales = 'free', space = 'free', switch = 'y') +
+  guides(fill=guide_legend(ncol=7, byrow=T, title=""))+
+  theme_minimal() +
+  theme(legend.position = 'none',
+        strip.text=element_text(size=14),
+        strip.text.y=element_text(face='italic'),
+        strip.placement = 'outside',
+        axis.title = element_blank(),
+        panel.grid = element_blank())
+
+#+end_src
+
+#+RESULTS:
+[[file:Kayal_SuppFigXX_sturcture.pdf]]
+
+
 
 
 ** COMMENT Relatdeness
