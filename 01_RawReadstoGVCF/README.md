@@ -6,40 +6,33 @@ module load  trimmomatic/0.39-zwxnnrx
 trimmomatic PE -threads $thr $file1 $file2 $tDir/$name.R1.fq.gz $tDir/$name.U1.fq.gz $tDir/$name.R2.fq.gz $tDir/$name.U2.fq.gz ILLUMINACLIP:Adapters.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:75
 ```
 
-#### Reads mapping
+#### Reads mapping to one genome Kk (Kokau.chrONLY.fasta)
 ```
+# specify the directory, num threads to use, and genome
 DIR=/ptmp/LAS/jfw-lab/corrinne/redoKokia/1-filt/
 thr=$SLURM_CPUS_PER_TASK
-ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kocoo.chrONLY.fasta
+ref=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kokau.chrONLY.fasta
 
 ml sentieon-genomics
+
+export bwt_max_mem=275G
 sentieon bwa mem -M -K 10000000 -R "@RG\tID:$name\tSM:$name\tPL:ILLUMINA" -t $thr $ref $DIR/$baseName.R1.fq.gz $DIR/$baseName.R2.fq.gz | sentieon util sort -o $name.sort.bam -t $thr --sam2bam -i -
-```
 
-#### Mapped reads sorting in Sentieon
-```
-module load sentieon-genomics
-sentieon util sort -o $name.sort.bam -t $thr --sam2bam -i $name.sam
-
-#extimate stats with sentieon-genomics:
-sentieon driver -t $thr -r $ref -i $name.sort.bam --algo GCBias --summary $name.GC.summary $name.GC.metric --algo MeanQualityByCycle $name.MQ.metric --algo QualDistribution $name.QD.metric --algo InsertSizeMetricAlgo $name.IS.metric --algo AlignmentStat $name.ALN.metric 
-sentieon plot metrics -o $name.metric.pdf gc=$name.GC.metric mq=$name.MQ.metric qd=$name.QD.metric isize=$name.IS.metric 
-
+#remove duplicated reads
 sentieon driver -t $thr -i $name.sort.bam --algo LocusCollector --fun score_info $name.score 
-sentieon driver -t $thr -i $name.sort.bam --algo Dedup --rmdup --score_info $name.score --metrics $name.dedup.metric $name.dedup.bam 
+sentieon driver -t $thr -i $name.sort.bam --algo Dedup --rmdup --score_info $name.score --metrics $name.dedup.metric $name.dedup.bam
 
 #realign with sentieon-genomics:
 sentieon driver -t $thr -r $ref -i $name.dedup.bam --algo Realigner $name.realign.bam
+sentieon driver -t $thr -r $ref -i $name.realign.bam --algo QualCal $name.recal_data.table
 
-#coverage caculation:
-sentieon driver -t $thr -r $ref -i $name.realign.bam --algo CoverageMetrics coverageoutput/$name
-
-#Base quality score recalibration:
-sentieon driver -t $thr -r $ref -i $name.realign.bam --algo QualCal $name.RECAL_DATA.TABLE
-
-#create gvcf files with sentieon-genomics:
-sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.RECAL_DATA.TABLE --algo Haplotyper $name.gVCF --emit_mode gvcf 
+#calling gvcf
+sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table --algo Haplotyper $name.gVCF --emit_mode gvcf 
 ```
+
+
+
+
 
 #### Calling VCF for each population/species
 ```
