@@ -128,6 +128,7 @@ bcftools view --exclude "F_PASS(GT='het')=1" KcKdKk_Kkn163.combined.bi.genic.rec
 vcftools --gzvcf KcKdKk_Kkn163.combined.vcf.gz --bed /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed --recode --out Pixy_genic_n160/KcKdKk_Kkn163.combined.genic
 ```
 
+
 #### Thin the VCF using VCFtools and calculate PCA using Plink
 ```
 module load plink/1.90b6.21
@@ -147,6 +148,59 @@ plink --threads 10 --vcf $output.recode.vcf --allow-extra-chr --const-fid --reco
 module load r
 
 Rscript LEA.R
-
 cut -d ' ' -f 2 *.ped > samplename.txt
+Rscript LEA_plot.R
+```
+
+
+#### Running Pixy chromosome by chromosome using genic region sequences only
+```
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=200G 
+#SBATCH --time=02:00:00
+#SBATCH --output="job.pixy_n160.%J.out"
+#SBATCH --job-name="pixy_n160"
+#SBATCH --array=1,2,3,5-13
+
+if [[ "$SLURM_ARRAY_TASK_ID" -eq 2 ]]; then
+    seq="2_4"
+else
+    seq=$(printf %02d ${SLURM_ARRAY_TASK_ID})
+fi
+
+
+seqKk="Kk_"$seq
+thr=20 #NUMBER_THREADS
+output1=KcKdKk_Kkn160.combined.genic
+vcf=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/Pixy_genic_n160/KcKdKk_Kkn163.combined.genic.recode.vcf.gz
+
+module purge
+module load micromamba/1.4.2-7jjmfkf
+eval "$(micromamba shell hook --shell=bash)"
+micromamba activate
+
+#micromamba install -c conda-forge pixy python=3.8
+#micromamba install -c bioconda htslib
+
+pixy --stats pi fst dxy --bypass_invariant_check yes --chromosomes $seqKk --vcf $vcf --populations pixy_populationlist_KcselfRef.txt --window_size 10000 --n_cores $thr --output_folder $TMPDIR/ --output_prefix $output1.chrm${seq}.
+mv $TMPDIR/$output1.chrm${seq}.* /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/Pixy_genic_n160/
+
+micromamba deactivate
+```
+
+#### Merge Pixy output together for final plot
+```
+file=KcKdKk_Kkn160.combined.genic
+
+awk 'FNR>1 || NR==1' $file.*_dxy.txt > output_temp/$file.dxy.txt
+awk 'FNR>1 || NR==1' $file.*_pi.txt > output_temp/$file.pi.txt
+awk 'FNR>1 || NR==1' $file.*_fst.txt > output_temp/$file.fst.txt
+
+cd output_temp
+
+cut -f 1,2,5 $file.pi.txt > $file.pi2.txt
+cut -f 1,2,3,6 $file.dxy.txt > $file.dxy2.txt
+cut -f 1,2,3,6 $file.fst.txt > $file.fst2.txt
 ```
