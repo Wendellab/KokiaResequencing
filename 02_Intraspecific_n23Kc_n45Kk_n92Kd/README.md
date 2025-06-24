@@ -43,9 +43,27 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table -
 sentieon driver -t $thr -r $ref --algo GVCFtyper --emit_mode all $analysis $infiles
 ```
 
-#### Using trimmed reads to build gVCFs for each species by applying different reference genomes
+#### Filtering VCFs
 ##### Reference genomes
 ```
+ml vcftools bcftools
+
+vcftools --vcf $input --remove-indels --max-missing-count 0 --max-alleles 2 --min-meanDP 10 --max-meanDP 100 --mac 2 --recode --recode-INFO-all --out $outputdir/$output.variant
+vcftools --vcf $input --remove-indels --max-maf 0 --min-meanDP 10 --max-meanDP 100 --recode --out $outputdir/$output.invariant
+
+cd $outputdir
+
+echo "invariant site =" $(wc -l $output.invariant*)
+echo "variant site =" $(wc -l $output.variant*)
+
+module load parallel/20220522-sxcww47
+
+parallel bgzip {} ::: $output.*variant.recode.vcf
+parallel tabix {} ::: $output.*variant.recode.vcf.gz
+
+bcftools concat --allow-overlaps --threads $thr $output.variant.recode.vcf.gz $output.invariant.recode.vcf.gz -Oz -o $output.combined.vcf.gz
+
+tabix $output.combined.vcf.gz
 ```
 
 ##### Reference genomes
