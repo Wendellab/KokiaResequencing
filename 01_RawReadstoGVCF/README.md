@@ -32,7 +32,7 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table -
 ```
 
 #### Calling VCF for each population/species
-##### Generating three VCF files: Kc.redo.self.vcf Kd.yesHAVO.redo.self.vcf Kk.redo.self.vcf
+##### Generating three VCF files: Kc.redo.self.vcf / Kd.yesHAVO.redo.self.vcf / Kk.redo.self.vcf
 ```
 ml sentieon-genomics
 
@@ -61,66 +61,71 @@ sentieon driver -t 100 -r $currentgenome --algo GVCFtyper --emit_mode all $outfi
 
 #### Filtering output VCF using depth and maximum alleles
 ```
+#for all three VCFs below, each had been filtered via the pipeline below to produce the combined VCFs
+
+input=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kc.redo.Kk.vcf
+input=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kd.yesHAVO.redo.Kk.vcf
+input=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Kk.redo.self.vcf
+
+###########
+thr=30 #NUMBER_THREADS
+
+outputdir=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163
+output=$(basename $input .vcf)
+
 ml vcftools bcftools
 
-vcftools --vcf $output1.Ah_$seq.vcf --remove-indels --max-missing-count 0 --max-alleles 2 --min-meanDP 10 --max-meanDP 100 --mac 2 --recode --recode-INFO-all --out  $output1.Ah_$seq.variant
-vcftools --vcf $output1.Ah_$seq.vcf --remove-indels --max-maf 0 --min-meanDP 10 --max-meanDP 100 --recode --out  $output1.Ah_$seq.invariant
+vcftools --vcf $input --remove-indels --max-missing-count 0 --max-alleles 2 --min-meanDP 10 --max-meanDP 100 --mac 2 --recode --recode-INFO-all --out $outputdir/$output.variant
+vcftools --vcf $input --remove-indels --max-maf 0 --min-meanDP 10 --max-meanDP 100 --recode --out $outputdir/$output.invariant
 
-vcftools --vcf $output1.Dh_$seq.vcf --remove-indels --max-missing-count 0 --max-alleles 2 --min-meanDP 10 --max-meanDP 100 --mac 2 --recode --recode-INFO-all --out  $output1.Dh_$seq.variant
-vcftools --vcf $output1.Dh_$seq.vcf --remove-indels --max-maf 0 --min-meanDP 10 --max-meanDP 100 --recode --out  $output1.Dh_$seq.invariant
+cd $outputdir
+
+echo "invariant site =" $(wc -l $output.invariant*)
+echo "variant site =" $(wc -l $output.variant*)
 
 module load parallel/20220522-sxcww47
 
-parallel bgzip {} ::: $output1.*h_$seq.*variant.recode.vcf
-parallel tabix {} ::: $output1.*h_$seq.*variant.recode.vcf.gz
+parallel bgzip {} ::: $output.*variant.recode.vcf
+parallel tabix {} ::: $output.*variant.recode.vcf.gz
 
-bcftools concat --allow-overlaps --threads $thr $output1.Ah_$seq.variant.recode.vcf.gz $output1.Ah_$seq.invariant.recode.vcf.gz -Oz -o $output1.Ah_$seq.combined.vcf.gz
-bcftools concat --allow-overlaps --threads $thr $output1.Dh_$seq.variant.recode.vcf.gz $output1.Dh_$seq.invariant.recode.vcf.gz -Oz -o $output1.Dh_$seq.combined.vcf.gz
+bcftools concat --allow-overlaps --threads $thr $output.variant.recode.vcf.gz $output.invariant.recode.vcf.gz -Oz -o $output.combined.vcf.gz
 
-parallel tabix {} ::: $output1.*h_$seq.*combined.vcf.gz
+tabix $output.combined.vcf.gz
 ```
 
-#### Merging all populations/species 
+#### Merging all species from three VCFs
 ```
 ml vcftools bcftools
 
 bcftools merge --threads 10 \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD2/AD2.Ah_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD4/AD4.Ah_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD5/AD5.Ah_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD1_MK_n25/AD1_MK_n25.Ah_$seq.combined.vcf.gz \
--Oz -o MKAD2AD5AD4_n51.Ah_$seq.combined.vcf.gz
+/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/Kc.redo.Kk.combined.vcf.gz \
+/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/Kd.yesHAVO.redo.Kk.combined.vcf.gz \
+/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/Kk.redo.self.combined.vcf.gz \
+-Oz -o KcKdKk_Kkn163.combined.vcf.gz
 
-bcftools merge --threads 10 \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD2/AD2.Dh_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD4/AD4.Dh_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD5/AD5.Dh_$seq.combined.vcf.gz \
-/lustre/hdd/LAS/jfw-lab/weixuan/07_PRGD_popgene/00_interval/AD1_MK_n25/AD1_MK_n25.Dh_$seq.combined.vcf.gz \
--Oz -o MKAD2AD5AD4_n51.Dh_$seq.combined.vcf.gz
+tabix KcKdKk_Kkn163.combined.vcf.gz
 
-bcftools view MKAD2AD5AD4_n51.Ah_$seq.combined.vcf.gz --threads 10 \
--m2 -M2 -i 'F_MISSING=0' -q 0.001:minor -Oz -o MKAD2AD5AD4_n51.Ah_$seq.combined.bi.vcf.gz
+bcftools view KcKdKk_Kkn163.combined.vcf.gz --threads 10 \
+-m2 -M2 -i 'F_MISSING=0' -q 0.001:minor -Oz -o KcKdKk_Kkn163.combined.bi.vcf.gz
 
-bcftools view MKAD2AD5AD4_n51.Dh_$seq.combined.vcf.gz --threads 10 \
--m2 -M2 -i 'F_MISSING=0' -q 0.001:minor -Oz -o MKAD2AD5AD4_n51.Dh_$seq.combined.bi.vcf.gz
-
-module load parallel/20220522-sxcww47
-parallel tabix {} ::: MKAD2AD5AD4_n51.*h_$seq.combined.bi.vcf.gz
+echo "total merged sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.vcf.gz)
+echo "total merged biSNP sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.bi.vcf.gz)
 ```
 
 
 #### Building final VCF with biallelics and adding annotation
 ```
-module load picard/2.27.4
+## Get a bed file that contains the genic regions
+zcat /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.gz |  awk '$3 == "gene" {print $1, $4-1, $5, $10}' OFS='\t' | grep -v "Unplaced" | grep -v "scaffold" | sed 's/"//g' | sed 's/;//g' > /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed
 
-picard GatherVcfs \
-$(for vcf in *.combined.bi.vcf.gz; do echo -I "$vcf"; done) \
--O MKAD2AD5AD4_n51.AhDh.combined.bi.vcf.gz 
+## Get the genic region SNPs
+vcftools --gzvcf KcKdKk_Kkn163.combined.bi.vcf.gz --bed /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed --recode --out KcKdKk_Kkn163.combined.bi.genic
 
-ml vcftools bcftools
+## This is for PLINK and LEA, and remove all fixed hetezygosity sites
+bcftools view --exclude "F_PASS(GT='het')=1" KcKdKk_Kkn163.combined.bi.genic.recode.vcf -o KcKdKk_Kkn163.combined.bi.genic.nofixhet.vcf
 
-bcftools reheader -s rename.MKAD2AD4AD5_n51.txt MKAD2AD5AD4_n51.AhDh.combined.bi.vcf.gz -o MKAD2AD5AD4_n51.AhDh.combined.bi.rehead.vcf
-bcftools annotate --set-id +"%CHROM:%POS:%REF:%ALT" MKAD2AD5AD4_n51.AhDh.combined.bi.rehead.vcf >  MKAD2AD5AD4_n51.AhDh.combined.bi.rehead.id.vcf
+## This is for Pixy to extract variant and invariant sites in genic regions only
+vcftools --gzvcf KcKdKk_Kkn163.combined.vcf.gz --bed /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed --recode --out Pixy_genic_n160/KcKdKk_Kkn163.combined.genic
 ```
 
 
