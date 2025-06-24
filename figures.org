@@ -538,7 +538,6 @@ kk.pca.data <-
 #+RESULTS:
 [[file:Report.PCA.Kk.png]]
 
-
 ** Order
 :PROPERTIES:
 :CREATED:  [2025-04-23 Wed 13:27]
@@ -906,8 +905,7 @@ structure.data[['All']] %>%
 
 
 
-
-*** Separate Kd structure by Location
+*** COMMENT Separate Kd structure by Location
 
 #+header: :results output file graphics
 #+header: :file Kd.structure.location.pdf
@@ -1011,6 +1009,7 @@ list(overview.plot, kd.outplant.structure.plots)
 [[file:Kd.structure.location.pdf]]
 
 
+*** Separate Kd structure by Location
 
 #+header: :results output file graphics
 #+header: :file Kayal_SuppFigXX_kd_loc_sturcture.pdf
@@ -1087,201 +1086,7 @@ kd.outplant.structure.data %>%
 [[file:Kayal_SuppFigXX_kd_loc_sturcture.pdf]]
 
 
-*** Separate Kd structure by Location (map)
-Load Libraries
-#+begin_src R :exports both :results output verbatim replace
-library("tidyverse")
-library("sf")
-library("rnaturalearth")
-library("rnaturalearthdata")
-library("grid")
-#+end_src
-
-
-Set colors
-#+begin_src R :exports both
-ocean.color <- rgb(193/255, 224/255, 250/255)
-#+end_src
-
-#+RESULTS:
-: #C1E0FA
-
-Get world shapes from rnaturalearth
-https://www.naturalearthdata.com/about/terms-of-use/
-#+begin_src R :exports both
-world <- ne_countries(scale = 10, returnclass = "sf")
-#+end_src
-
-#+RESULTS:
-
-Subet world to just USA and break =MULTIPOLYGON= into seperate =POLYGON='s.
-Necessary to color each Hawaiin island.
-#+begin_src R :exports both
-usa.polys <- world %>%
-  filter(abbrev == "U.S.A.") %>%
-  st_cast("POLYGON")
-#+end_src
-
-#+RESULTS:
-
-Set bounding box for hawaii.
-#+begin_src R :exports both
-hawaii.bbox <- data.frame(lon=c(-162, -154), lat=c(18,23)) %>%
-  st_as_sf(coords = c('lon', 'lat'), crs=4326) %>%
-  st_bbox() %>%
-  st_as_sfc()
-#+end_src
-
-#+RESULTS:
-: list(c(-162, -154, -154, -162, -162, 18, 18, 23, 23, 18))
-
-Get each major hawaiian island based on the GNIS location.
-https://www.sciencebase.gov/catalog/item/6437030bd34ee8d4addcc379
-#+begin_src R :exports both
-island.names <-
-  rbind(c("Kauaʻi",22.04942,-159.530987, "Kk", 0.3, 0.1),
-        c("Niʻihau",21.9066667,-160.1491667, NA, -0.2, 0),
-        c("Oʻahu",21.4333333,-157.9666667, NA, 0.3, 0.3),
-        c("Molokaʻi",21.138307,-157.0124817,"Kc", 0.2, 0),
-        c("Lānaʻi", 20.8679549, -156.9002151, NA, -0.25, -0.25),
-        c("Kahoʻolawe",20.55,-156.6, NA, -0.15, 0),
-        c("Maui", 20.770239,-156.268158, NA, 0.3, 0.3),
-        c("Hawaiʻi",19.5494375,-155.5622864, "Kd", 0.6, 0.6)) %>%
-  as.data.frame %>%
-  setNames(c("Name", "lat", "lon", "fill", "nudge_y", "nudge_x")) %>%
-  st_as_sf(coords = c('lon', 'lat'), crs=4326) %>%
-  cbind(st_coordinates(.$geometry)) %>%
-  mutate(geometry = st_buffer(geometry, dist=1)) %>%
-  st_join(x=usa.polys, largest = T, left=F) %>%
-  select(Name, X, Y, nudge_y, nudge_x, fill, geometry) %>%
-  mutate(text.y = as.numeric(Y) + as.numeric(nudge_y),
-         text.x = as.numeric(X) + as.numeric(nudge_x))
-#+end_src
-
-
-Create the main map of hawaii
-#+begin_src R :exports both
-big.island.bbox <-
-  st_as_sf(data.frame(lat=19.5494375,lon=-155.5622864),
-         coords = c('lon', 'lat'), crs=4326) %>%
-  cbind(st_coordinates(.$geometry)) %>%
-  mutate(geometry = st_buffer(geometry, dist=1)) %>%
-  st_join(x=usa.polys, largest = T, left=F) %>%
-  st_bbox() %>%
-  st_as_sfc()
-
-big.island.plot <- ggplot(data = world) +
-  geom_sf() +
-  coord_sf(xlim=range(st_coordinates(big.island.bbox)[,'X']),
-           ylim=range(st_coordinates(big.island.bbox)[,'Y'])) +
-  annotate(geom = "text", x = -154.8, y = 20.3,
-           label = "Hawai'i",
-##           fontface = "italic",
-           family="ETBembo",
-           color = "#0a71b3",
-           vjust = 0.75,
-           hjust = 1,
-           size = 13) +
-  theme_bw() +
-  theme(panel.background = element_rect(fill=ocean.color),
-        axis.title = element_blank(),
-        legend.position = "none",
-        legend.title = element_blank(),
-        legend.text = element_text(family = "ETBembo",
-                                   face="italic",
-                                   size=18),
-        legend.background = element_rect(fill=alpha("white", 0.75)))
-big.island.plot
-#+end_src
-
-
-#+header: :results output file graphics
-#+header: :file Kd.sturcture.location.map.png
-#+header: :width 8 :height 8 :units in :res 300 :bg white
-#+begin_src R :exports both
-
-locations <-
-  read.delim("kodry.loc.tsv") %>%
-  mutate(Unit = ifelse(Unit=="", Plant.type, Unit),
-         IGBB.Sample.ID = sub("Kk", "Kd", IGBB.Sample.ID)) %>%
-    select("individual" = IGBB.Sample.ID,
-           Population.Reference,
-           Population,
-           LocationCode,
-           "loc"=Unit,
-           "lat"=Latitude,
-           "lon"=Longtitude)
-
-
-kd.outplant.structure.data <-
-  intraspecific.data[["Kd"]] %>%
-  left_join(locations) %>%
-  mutate(loc = ifelse(is.na(loc), "ISU GH", loc)) %>%
-  mutate(facet.row= factor(loc)) %>%
-  split(., .$loc)
-
-gps.coord <-
-  select(locations, loc, lat, lon) %>%
-  distinct %>%
-  na.omit %>%
-  st_as_sf(coords = c('lon', 'lat'), crs=4326) %>%
-  cbind(st_coordinates(.$geometry)) %>%
-  mutate(geometry = st_buffer(geometry, dist=1))
-
-kd.outplant.structure.plots <-
-  mapply(function(x, name) ggplot(x, aes(order, q, fill=pop)) +
-                     geom_col(width=1,color='black') +
-                     scale_x_discrete(expand = c(0,0)) +
-                     scale_y_continuous(expand = c(0,0),
-                                        labels = scales::label_percent(),
-                                        breaks = seq(0.25, 0.75, 0.25)) +
-                     scale_fill_manual(values= intra.colors[["Kd"]]) +
-                     annotate('text', label=name, x=0.5, y=1,
-                              hjust=0.5, vjust=-1) +
-                     coord_radial(expand=F) +
-                     guides(fill=guide_legend(ncol=7, byrow=T, title=""))+
-                     theme_minimal() +
-                     theme(legend.position = 'none',
-                           title=element_text(size=12),
-                           axis.title = element_blank(),
-                           axis.text = element_blank(),
-                           panel.grid = element_blank()),
-   kd.outplant.structure.data,
-   names(kd.outplant.structure.data),
-   SIMPLIFY=F)
-
-library(grid)
-
-gps.sizes <-
-  as.data.frame(sapply(kd.outplant.structure.data, nrow)/4,
-              nm="size") %>%
-  rownames_to_column("loc") %>%
-  right_join(gps.coord) %>%
-  na.omit %>%
-  group_by(X, Y) %>%
-  mutate(xmin = X - 0.05,
-         xmax = X + 0.05,
-         ymin = Y - 0.05,
-         ymax = Y + 0.05)
-
-gps.sizes %>%
-  select(loc, X, Y)
-
-
-Reduce(`+`, list(big.island.plot,
-                 apply(gps.sizes, 1, function(x)
-                   annotation_custom(
-                     grob=ggplotGrob(kd.outplant.structure.plots[[x[["loc"]]]]),
-                     xmin=x[["xmin"]], ymin=x[["ymin"]],
-                     xmax=x[["xmax"]], ymax=x[["ymax"]]
-                   ))))
-
-#+end_src
-
-#+RESULTS:
-[[file:Kd.sturcture.location.map.png]]
-
-** Relatdeness
+** COMMENT Relatdeness
 :PROPERTIES:
 :CREATED:  [2025-02-24 Mon 08:27]
 :END:
