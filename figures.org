@@ -1909,7 +1909,7 @@ cowplot::plot_grid(plotlist = legends, nrow = 1)
 #+RESULTS:
 
 #+header: :results output file graphics
-#+header: :file Kayal_Figure02_pca-struct-relate.new.png
+#+header: :file Kayal_Figure02_pca-struct-relate.png
 #+header: :bg white :width 8.5 :height 11 :units in :res 100
 #+begin_src R :exports both
 grid.newpage()
@@ -2083,6 +2083,4 @@ popViewport()
 #+end_src
 
 #+RESULTS:
-[[file:Kayal_Figure02_pca-struct-relate.new.png]]
-
-
+[[file:Kayal_Figure02_pca-struct-relate.png]]
