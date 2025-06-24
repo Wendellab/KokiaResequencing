@@ -1,4 +1,4 @@
-### From rawreads to final VCF
+### All 163 samples sequencing data from rawreads to final VCF using the reference genome of Kk
 
 #### Reads trimming
 ```
@@ -112,7 +112,6 @@ echo "total merged sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.vcf.gz
 echo "total merged biSNP sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.bi.vcf.gz)
 ```
 
-
 #### Building final VCF with biallelics and adding annotation
 ```
 ## Get a bed file that contains the genic regions
@@ -129,4 +128,25 @@ bcftools view --exclude "F_PASS(GT='het')=1" KcKdKk_Kkn163.combined.bi.genic.rec
 vcftools --gzvcf KcKdKk_Kkn163.combined.vcf.gz --bed /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed --recode --out Pixy_genic_n160/KcKdKk_Kkn163.combined.genic
 ```
 
+#### Thin the VCF using VCFtools and calculate PCA using Plink
+```
+module load plink/1.90b6.21
 
+vcf=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/KcKdKk_Kkn163.combined.bi.genic.nofixhet.vcf
+output=KcKdKk_Kkn163.combined.bi.genic.LD
+
+vcftools --vcf $vcf --thin 100 --recode --out $output
+
+plink --threads 10 --vcf $output.recode.vcf --allow-extra-chr --const-fid --recode \
+--make-bed --pca 20 var-wts --distance square 1-ibs --genome --out $output
+```
+
+#### Using Plink converted ped format VCF to run LEA
+##### KcKdKk_Kkn163.combined.bi.genic.LD.ped
+```
+module load r
+
+Rscript LEA.R
+
+cut -d ' ' -f 2 *.ped > samplename.txt
+```
