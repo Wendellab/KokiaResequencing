@@ -6,7 +6,7 @@ module load  trimmomatic/0.39-zwxnnrx
 trimmomatic PE -threads $thr $file1 $file2 $tDir/$name.R1.fq.gz $tDir/$name.U1.fq.gz $tDir/$name.R2.fq.gz $tDir/$name.U2.fq.gz ILLUMINACLIP:Adapters.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:75
 ```
 
-#### Reads mapping to one genome Kk (Kokau.chrONLY.fasta)
+#### All sample reads mapping to one genome Kk (Kokau.chrONLY.fasta)
 ```
 # specify the directory, num threads to use, and genome
 DIR=/ptmp/LAS/jfw-lab/corrinne/redoKokia/1-filt/
@@ -36,11 +36,29 @@ sentieon driver -t $thr -r $ref -i $name.realign.bam -q $name.recal_data.table -
 
 #### Calling VCF for each population/species
 ```
-cat AD1_MK_n25.txt | sentieon driver --interval Ah_$seq -t $thr -r $ref --algo GVCFtyper --emit_mode all $TMPDIR/$output1.Ah_$seq.vcf -
-mv $TMPDIR/$output1.Ah_$seq.vcf* $Dir/$output1/
+ml sentieon-genomics
 
-cat AD1_MK_n25.txt | sentieon driver --interval Dh_$seq -t $thr -r $ref --algo GVCFtyper --emit_mode all $TMPDIR/$output1.Dh_$seq.vcf -
-mv $TMPDIR/$output1.Dh_$seq.vcf* $Dir/$output1/
+set1=$(ls gVCF/Kc*vsKc.gVCF)
+set2=$(ls gVCF/Kd*vsKd.gVCF)
+set3=$(ls gVCF/Kd*vsKd.gVCF  | sed '/HV/d')
+set4=$(ls gVCF/Kk*vsKk.gVCF)
+set5=$(ls gVCF/Kc*vsKk.gVCF)
+set6=$(ls gVCF/Kd*vsKk.gVCF)
+set7=$(ls gVCF/Kd*vsKk.gVCF  | sed '/HV/d')
+
+genome=(Kocoo.chrONLY.fasta Kodry.chrONLY.fasta Kodry.chrONLY.fasta Kokau.chrONLY.fasta Kokau.chrONLY.fasta Kokau.chrONLY.fasta Kokau.chrONLY.fasta)
+sets=(set1 set2 set3 set4 set5 set6 set7)
+analysis=(Kc.redo.self.vcf Kd.yesHAVO.redo.self.vcf Kd.noHAVO.redo.self.vcf Kk.redo.self.vcf Kc.redo.Kk.vcf Kd.yesHAVO.redo.Kk.vcf Kd.noHAVO.redo.Kk.vcf)
+
+currentgenome="${genome[$SLURM_ARRAY_TASK_ID]}"
+currentset="${sets[$SLURM_ARRAY_TASK_ID]}"
+outfile="${analysis[$SLURM_ARRAY_TASK_ID]}"
+
+infiles=$(eval "echo \${$currentset[@]}")
+
+echo "my current genome is $currentgenome. I will write to $outfile. My infiles are $infiles"
+
+sentieon driver -t 100 -r $currentgenome --algo GVCFtyper --emit_mode all $outfile $infiles
 ```
 
 #### Filtering output VCF using depth and maximum alleles
