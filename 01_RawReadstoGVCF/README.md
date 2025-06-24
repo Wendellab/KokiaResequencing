@@ -118,8 +118,9 @@ echo "total merged biSNP sites for n163" $(zgrep -cv '#' KcKdKk_Kkn163.combined.
 ## Get a bed file that contains the genic regions
 zcat /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.gz |  awk '$3 == "gene" {print $1, $4-1, $5, $10}' OFS='\t' | grep -v "Unplaced" | grep -v "scaffold" | sed 's/"//g' | sed 's/;//g' > /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed
 
-## Get the genic region SNPs
+## Get the genic region SNPs for Heterozygosity and inbreeding FIS 
 vcftools --gzvcf KcKdKk_Kkn163.combined.bi.vcf.gz --bed /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kk.ncbi.gtf.genic.bed --recode --out KcKdKk_Kkn163.combined.bi.genic
+vcftools --vcf /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/00_Kkref_n163/KcKdKk_Kkn163.combined.bi.genic.recode.vcf --het --out KcKdKk_Kkn163
 
 ## This is for PLINK and LEA, and remove all fixed hetezygosity sites
 bcftools view --exclude "F_PASS(GT='het')=1" KcKdKk_Kkn163.combined.bi.genic.recode.vcf -o KcKdKk_Kkn163.combined.bi.genic.nofixhet.vcf
