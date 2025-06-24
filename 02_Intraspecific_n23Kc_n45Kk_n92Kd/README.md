@@ -70,13 +70,73 @@ tabix $output.combined.vcf.gz
 
 #
 #### For Kc 
-##### 22 KC + One Havo
+##### PLINK and Pixy (22 KC + One Havo)  
+```
+vcf=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/01_KcselfRef/Pixy/Kc.yesHAVO.redo.self.variant.recode.vcf.gz
+vcfoutput=Kc_Kcrefn23
+output=Kc_Kcrefn23.bi.ld
+
+zcat /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.gz |  awk '$3 == "gene" {print $1, $4-1, $5, $10}' OFS='\t' | grep -v "Unplaced" | grep -v "scaffold" | sed 's/"//g' | sed 's/;//g' > /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.genic.bed
+bedfile=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.genic.bed
+
+ml bcftools vcftools
+
+#bcftools query -l Pixy/Kc.yesHAVO.redo.self.variant.recode.vcf.gz | grep -v 'Kd' > subset_n22.txt
+
+bcftools view --types snps $vcf --threads 10 -m2 -M2 -i 'F_MISSING=0' -q 0.001:minor -o $vcfoutput.bi.vcf
+bcftools view  --exclude "F_PASS(GT='het')=1"  $vcfoutput.bi.vcf -o $vcfoutput.bi.nofixhet.vcf
+vcftools --vcf $vcfoutput.bi.nofixhet.vcf --bed $bedfile --recode --out $vcfoutput.bi.nofixhet.genic
+vcftools --vcf $vcfoutput.bi.nofixhet.genic.recode.vcf --thin 100 --recode --out $vcfoutput.bi.nofixhet.genic.thin
+bcftools annotate --set-id +"%CHROM:%POS:%REF:%ALT" $vcfoutput.bi.nofixhet.genic.thin.recode.vcf > $output.vcf
+
+#echo "total biSNP sites for 23 Kc" $(zgrep -cv '#' $vcf2)
+#echo "total biSNP sites for 23 Kc no fixed het" $(zgrep -cv '#' $vcf4)
+
+module load plink/1.90b6.21
+plink --threads 10 --vcf $output.vcf --allow-extra-chr --const-fid --recode \
+--make-bed --pca 20 var-wts --distance square 1-ibs --genome --out $output
+
+module load r
+Rscript PCA_plot.R
+
+module load r
+Rscript LEA.R
+cut -d ' ' -f 2 *.ped > samplename.txt
 ```
 
+##### PLINK and Pixy (22 Kc only)
 ```
+vcf=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/01_KcselfRef/Pixy/Kc.yesHAVO.redo.self.variant.recode.vcf.gz
+vcfoutput=Kc_Kcrefn22
+output=Kc_Kcrefn22.bi.ld
 
-##### 22 Kc only
-```
+zcat /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.gz |  awk '$3 == "gene" {print $1, $4-1, $5, $10}' OFS='\t' | grep -v "Unplaced" | grep -v "scaffold" | sed 's/"//g' | sed 's/;//g' > /ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.genic.bed
+bedfile=/ptmp/LAS/jfw-lab/corrinne/redoKokia/Weixuan/04_gff/Kc.ncbi.gtf.genic.bed
+
+ml bcftools vcftools
+
+bcftools query -l Pixy/Kc.yesHAVO.redo.self.variant.recode.vcf.gz | grep -v 'Kd' > subset_n22.txt
+bcftools query -l $vcf | grep 'Kc_' > Kc_KcrefN22.txt 
+
+bcftools view -S Kc_KcrefN22.txt  --types snps $vcf --threads 10 -m2 -M2 -i 'F_MISSING=0' -q 0.001:minor -o $vcfoutput.bi.vcf
+bcftools view  --exclude "F_PASS(GT='het')=1"  $vcfoutput.bi.vcf -o $vcfoutput.bi.nofixhet.vcf
+vcftools --vcf $vcfoutput.bi.nofixhet.vcf --bed $bedfile --recode --out $vcfoutput.bi.nofixhet.genic
+vcftools --vcf $vcfoutput.bi.nofixhet.genic.recode.vcf --thin 100 --recode --out $vcfoutput.bi.nofixhet.genic.thin
+bcftools annotate --set-id +"%CHROM:%POS:%REF:%ALT" $vcfoutput.bi.nofixhet.genic.thin.recode.vcf > $output.vcf
+
+echo "total biSNP sites for 22 Kc" $(zgrep -cv '#' $vcf2)
+echo "total biSNP sites for 22 Kc no fixed het" $(zgrep -cv '#' $vcf4)
+
+module load plink/1.90b6.21
+plink --threads 10 --vcf $output.vcf --allow-extra-chr --const-fid --recode \
+--make-bed --pca 20 var-wts --distance square 1-ibs --genome --out $output
+
+module load r
+Rscript PCA_plot.R
+
+module load r
+Rscript LEA.R
+cut -d ' ' -f 2 *.ped > samplename.txt
 ```
 
 #
