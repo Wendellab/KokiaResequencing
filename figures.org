@@ -22,6 +22,23 @@ sessionInfo()
 
 #+RESULTS:
 #+begin_example
+── [1mAttaching core tidyverse packages[22m ───────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──
+[32m✔[39m [34mdplyr    [39m 1.1.4     [32m✔[39m [34mreadr    [39m 2.1.4
+[32m✔[39m [34mforcats  [39m 1.0.0     [32m✔[39m [34mstringr  [39m 1.5.1
+[32m✔[39m [34mggplot2  [39m 3.5.1     [32m✔[39m [34mtibble   [39m 3.2.1
+[32m✔[39m [34mlubridate[39m 1.9.2     [32m✔[39m [34mtidyr    [39m 1.3.1
+[32m✔[39m [34mpurrr    [39m 1.0.2     
+── [1mConflicts[22m ─────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+[31m✖[39m [34mdplyr[39m::[32mfilter()[39m masks [34mstats[39m::filter()
+[31m✖[39m [34mdplyr[39m::[32mlag()[39m    masks [34mstats[39m::lag()
+[36mℹ[39m Use the ]8;;http://conflicted.r-lib.org/conflicted package]8;; to force all conflicts to become errors
+Linking to GEOS 3.9.1, GDAL 3.5.3, PROJ 8.2.1; sf_use_s2() is TRUE
+
+Attaching package: ‘rnaturalearthdata’
+
+The following object is masked from ‘package:rnaturalearth’:
+
+    countries110
 R version 4.2.2 (2022-10-31)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Rocky Linux 9.1 (Blue Onyx)
@@ -31,34 +48,25 @@ BLAS:   /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/
 LAPACK: /apps/spack-managed/gcc-11.3.1/r-4.2.2-34ublnqh75jvi4k4dfkvbfrz2ivdmfvm/rlib/R/lib/libRlapack.so
 
 locale:
- [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8
- [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
- [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C
-[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
-[1] grid      stats     graphics  grDevices utils     datasets  methods   base
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] rnaturalearthdata_1.0.0 rnaturalearth_1.0.1     sf_1.0-18
- [4] jpeg_0.1-10             scales_1.3.0            hues_0.2.0
- [7] lubridate_1.9.2         forcats_1.0.0           stringr_1.5.1
-[10] dplyr_1.1.4             purrr_1.0.2             readr_2.1.4
-[13] tidyr_1.3.1             tibble_3.2.1            ggplot2_3.5.1
-[16] tidyverse_2.0.0
+ [1] jpeg_0.1-10             rnaturalearthdata_1.0.0 rnaturalearth_1.0.1     sf_1.0-18               lubridate_1.9.2        
+ [6] forcats_1.0.0           stringr_1.5.1           dplyr_1.1.4             purrr_1.0.2             readr_2.1.4            
+[11] tidyr_1.3.1             tibble_3.2.1            ggplot2_3.5.1           tidyverse_2.0.0        
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.11        RColorBrewer_1.1-3 pillar_1.9.0       compiler_4.2.2
- [5] class_7.3-22       tools_4.2.2        jsonlite_1.8.7     lifecycle_1.0.4
- [9] gtable_0.3.5       timechange_0.2.0   viridisLite_0.4.2  pkgconfig_2.0.3
-[13] rlang_1.1.3        cli_3.6.2          DBI_1.2.2          terra_1.7-83
-[17] e1071_1.7-16       httr_1.4.7         withr_3.0.0        generics_0.1.3
-[21] vctrs_0.6.5        hms_1.1.3          classInt_0.4-10    cowplot_1.1.3
-[25] tidyselect_1.2.1   glue_1.7.0         R6_2.5.1           fansi_1.0.6
-[29] tcltk_4.2.2        tzdb_0.4.0         farver_2.1.2       magrittr_2.0.3
-[33] codetools_0.2-19   units_0.8-5        colorspace_2.1-0   labeling_0.4.3
-[37] KernSmooth_2.23-24 utf8_1.2.4         proxy_0.4-27       stringi_1.8.4
-[41] munsell_0.5.1
+ [1] Rcpp_1.0.11        pillar_1.9.0       compiler_4.2.2     class_7.3-22       tools_4.2.2        jsonlite_1.8.7    
+ [7] lifecycle_1.0.4    gtable_0.3.5       timechange_0.2.0   pkgconfig_2.0.3    rlang_1.1.3        cli_3.6.2         
+[13] DBI_1.2.2          terra_1.7-83       e1071_1.7-16       httr_1.4.7         withr_3.0.0        generics_0.1.3    
+[19] vctrs_0.6.5        hms_1.1.3          classInt_0.4-10    tidyselect_1.2.1   glue_1.7.0         R6_2.5.1          
+[25] fansi_1.0.6        tzdb_0.4.0         magrittr_2.0.3     codetools_0.2-19   scales_1.3.0       units_0.8-5       
+[31] colorspace_2.1-0   utf8_1.2.4         KernSmooth_2.23-24 stringi_1.8.4      proxy_0.4-27       munsell_0.5.1
 #+end_example
 
 Set colors
@@ -68,11 +76,18 @@ species.color <- RColorBrewer::brewer.pal(name="Set1", 3) %>%
   setNames(., c("Kc", "Kd", "Kk"))
 #+end_src
 
+#+RESULTS:
+| #E41A1C |
+| #377EB8 |
+| #4DAF4A |
+
 Get world shapes from rnaturalearth
 https://www.naturalearthdata.com/about/terms-of-use/
 #+begin_src R :exports both
 world <- ne_countries(scale = 10, returnclass = "sf")
 #+end_src
+
+#+RESULTS:
 
 Subet world to just USA and break =MULTIPOLYGON= into seperate =POLYGON='s.
 Necessary to color each Hawaiin island.
@@ -82,6 +97,8 @@ usa.polys <- world %>%
   st_cast("POLYGON")
 #+end_src
 
+#+RESULTS:
+
 Set bounding box for hawaii.
 #+begin_src R :exports both
 hawaii.bbox <- data.frame(lon=c(-162, -154), lat=c(18,23)) %>%
@@ -89,6 +106,9 @@ hawaii.bbox <- data.frame(lon=c(-162, -154), lat=c(18,23)) %>%
   st_bbox() %>%
   st_as_sfc()
 #+end_src
+
+#+RESULTS:
+: list(c(-162, -154, -154, -162, -162, 18, 18, 23, 23, 18))
 
 Get each major hawaiian island based on the GNIS location.
 https://www.sciencebase.gov/catalog/item/6437030bd34ee8d4addcc379
@@ -115,6 +135,9 @@ island.names <-
 
 Create the main map of hawaii
 #+begin_src R :exports both
+havo.loc <-
+  data.frame(lat=19.506785398861332, lon=-155.4641966439659)
+
 hawaii.plot <- ggplot(data = world) +
   geom_sf() +
   geom_sf(aes(fill=fill), island.names) +
@@ -127,6 +150,16 @@ hawaii.plot <- ggplot(data = world) +
                     labels=c("Kc" = "K. cookei",
                              "Kd" = "K. drynarioids",
                              "Kk" = "K. kauaiensis")) +
+  annotate(geom = "point", x = havo.loc$lon, y = havo.loc$lat,
+           shape=21, size=2, color="grey90",
+           fill=species.color["Kc"]) +
+  annotate(geom = "text", x = havo.loc$lon, y = havo.loc$lat,
+           label = "HAVO",
+##           fontface = "italic",
+           color = "grey90",
+           vjust = -0.8,
+           hjust = 0.45,
+           size = 4) +
   annotate(geom = "text", x = -162, y = 23,
            label = "Hawaiian Islands",
 ##           fontface = "italic",
@@ -144,8 +177,10 @@ hawaii.plot <- ggplot(data = world) +
                                    face="italic",
                                    size=18),
         legend.background = element_rect(fill=alpha("white", 0.75)))
-#hawaii.plot
+hawaii.plot
 #+end_src
+
+#+RESULTS:
 
 Rotate world map to center on the hawaiian bounding box [[https://stackoverflow.com/questions/68278789/how-to-rotate-world-map-using-mollweide-projection-with-sf-rnaturalearth-ggplot][StackOverflow]]
 #+begin_src R :exports both
@@ -156,6 +191,8 @@ world_Mollweide_rotated.sf <- world_ne.sf %>%
   st_break_antimeridian(lon_0 = ante_meridian) %>%
   st_transform(crs=paste0("+proj=longlat +datum=WGS84 +no_defs +lon_0=",ante_meridian," +x_0=0 +y_0=0"))
 #+end_src
+
+#+RESULTS:
 
 Create world map inset
 #+begin_src R :exports both
@@ -179,6 +216,8 @@ world.plot <- ggplot() +
         axis.text = element_blank())
 #+end_src
 
+#+RESULTS:
+
 
 Get image of K. kauaiensis from National Tropical Botanical Gardens
 #+begin_src shell :exports both
@@ -186,6 +225,8 @@ AMAZON=https://s3-us-west-2.amazonaws.com/
 wget -O Kk.jpg \
     $AMAZON/ntbgmeettheplants/images/600h/2248.jpg
 #+end_src
+
+#+RESULTS:
 
 Get images of Kc and Kd from Wiki
 #+begin_src shell :exports both :results output silent
@@ -208,6 +249,9 @@ top.vp <- viewport(
 grid.show.layout(top.vp$layout, vp=top.vp)
 #+end_src
 
+#+RESULTS:
+: TRUE
+
 
 Final Figure
 #+header: :results output graphics file
@@ -227,6 +271,26 @@ pushViewport(viewport(x=0.1, y=0.1,
 grid.draw(ggplotGrob(world.plot))
 popViewport()
 popViewport()
+
+
+grid.lines(x = unit(c(0.80, 0.315), "npc"),
+          y = unit(c(0.98, 0.79), "npc"),
+          default.units = "npc",
+          arrow(length = unit(3, "mm")),
+          gp=gpar(col='grey50'))
+grid.lines(x = unit(c(0.80, 0.525), "npc"),
+          y = unit(c(0.66, 0.63), "npc"),
+          default.units = "npc",
+          arrow(length = unit(3, "mm")),
+          gp=gpar(col='grey50'))
+grid.lines(x = unit(c(0.80, 0.68), "npc"),
+          y = unit(c(0.35, 0.355), "npc"),
+          default.units = "npc",
+          arrow(length = unit(3, "mm")),
+          gp=gpar(col='grey50'))
+
+
+
 pushViewport(viewport(
   layout.pos.col = 3,
   layout = grid.layout(7, 1,
@@ -288,8 +352,12 @@ flower.kd.dim = dim(flower.kd)
 flower.kd.dim.ratio = flower.kd.dim[2]/flower.kd.dim[1]
 grid.raster(flower.kd, width = flower.kd.dim.ratio)
 popViewport()
+popViewport()
 
 #+end_src
+
+#+RESULTS:
+[[file:Kayal_Figure01_map.png]]
 
 * Figure 2 - PCA | Structure | Relatedness
 :PROPERTIES:
@@ -357,6 +425,8 @@ intraspecific.colors <- list(
   "Kokau" = c("#c35d93", "#c5ac53", "#c4553e", "#9041cc")
 )
 #+end_src
+
+#+RESULTS:
 
 ** Plink PCA
 :PROPERTIES:
@@ -567,6 +637,8 @@ facet.names <- data.frame(sample=sample.order,
 facet.names <- split(facet.names$sample, facet.names$facet)
 #+end_src
 
+#+RESULTS:
+
 ** Structure
 Load stucture data from saves for interspecific and the three intraspecific LEA runs.
 Write out table tables for Supp. Data
@@ -609,13 +681,13 @@ Write tables  for Supp. Data
 #+begin_src R :exports both :results silent
 mapply(write.table,
        MoreArgs = list( sep="\t", quote=F, row.names=F),
-       interspecific,
-       sprintf("inter.%s.lea.txt", names(interspecific)))
+       interspecific.data,
+       sprintf("inter.%s.lea.txt", names(interspecific.data)))
 
 mapply(write.table,
        MoreArgs = list( sep="\t", quote=F, row.names=F),
-       intraspecific,
-       sprintf("intra.%s.lea.txt", names(intraspecific)))
+       intraspecific.data,
+       sprintf("intra.%s.lea.txt", names(intraspecific.data)))
 #+end_src
 
 Compare interspecific populations between the three runs
@@ -645,6 +717,8 @@ intra.colors <-
 
 
 #+end_src
+
+#+RESULTS:
 
 Create plots for interspecific structure for each species. To keep everything aligned later, each species needs to be graphed separately.
 #+begin_src R :exports both
